@@ -219,7 +219,15 @@ public class Player implements ActionListener, MouseListener {
                 }
             }
         });
-        readFiles(new File("C:/music").listFiles());
+        // TODO store last directory
+        File f = new File("C:/music");
+        if(!f.exists() || f.isFile()) {
+            f = new File("D:/music");
+        }
+        if(!f.exists() || f.isFile()) {
+            f = new File("/");
+        }
+        readFiles(f.listFiles());
 
         
         Button back = new Button("Up");

@@ -624,13 +624,13 @@ final class Layer3Decoder {
                 if (abv < Constants.T43_SIZE) {
                     return globalGain * Constants.T43[abv];
                 } else {
-                    return globalGain * (double) Math.pow(abv, D43);
+                    return globalGain * Math.pow(abv, D43);
                 }
             } else {
                 if (-abv < Constants.T43_SIZE) {
                     return -globalGain * Constants.T43[-abv];
                 } else {
-                    return -globalGain * (double) Math.pow(-abv, D43);
+                    return -globalGain * Math.pow(-abv, D43);
                 }
             }
         }
@@ -1016,7 +1016,7 @@ final class Layer3Decoder {
                         lr0[sb][ss] = ro0[sb][ss] * k0[i];
                         lr1[sb][ss] = ro0[sb][ss] * k1[i];
                     } else {
-                        lr1[sb][ss] = ro0[sb][ss] / (double) (1 + isRatio[i]);
+                        lr1[sb][ss] = ro0[sb][ss] / (1 + isRatio[i]);
                         lr0[sb][ss] = lr1[sb][ss] * isRatio[i];
                     }
                 }
