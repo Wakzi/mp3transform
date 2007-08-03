@@ -44,8 +44,7 @@ import java.io.PushbackInputStream;
  */
 public final class Bitstream {
     /**
-     * Synchronization control constant for the initial synchronization to the
-     * start of a frame.
+     * Synchronization control constant for the initial synchronization to the start of a frame.
      */
     static final byte INITIAL_SYNC = 0;
     /**
@@ -53,8 +52,7 @@ public final class Bitstream {
      */
     static final byte STRICT_SYNC = 1;
     /**
-     * Maximum size of the frame buffer. max. 1730 bytes per frame: 144 *
-     * 384kbit/s / 32000 Hz + 2 Bytes CRC
+     * Maximum size of the frame buffer. max. 1730 bytes per frame: 144 * 384kbit/s / 32000 Hz + 2 Bytes CRC
      */
     private static final int BUFFER_INT_SIZE = 433;
     /**
@@ -79,10 +77,8 @@ public final class Bitstream {
     private boolean singleChMode;
     private static final int BITMASK[] = {
             0, // dummy
-            0x00000001, 0x00000003, 0x00000007, 0x0000000F, 0x0000001F,
-            0x0000003F, 0x0000007F, 0x000000FF, 0x000001FF, 0x000003FF,
-            0x000007FF, 0x00000FFF, 0x00001FFF, 0x00003FFF, 0x00007FFF,
-            0x0000FFFF, 0x0001FFFF };
+            0x00000001, 0x00000003, 0x00000007, 0x0000000F, 0x0000001F, 0x0000003F, 0x0000007F, 0x000000FF, 0x000001FF, 0x000003FF, 0x000007FF, 0x00000FFF, 0x00001FFF, 0x00003FFF,
+            0x00007FFF, 0x0000FFFF, 0x0001FFFF };
     private final PushbackInputStream source;
     private final Header header = new Header();
     private final byte syncBuffer[] = new byte[4];
@@ -126,8 +122,7 @@ public final class Bitstream {
     /**
      * Parse ID3v2 tag header to find out size of ID3v2 frames.
      * 
-     * @param in
-     *            MP3 InputStream
+     * @param in MP3 InputStream
      * @return size of ID3v2 frames + header
      * @throws IOException
      * @author JavaZOOM
@@ -139,8 +134,7 @@ public final class Bitstream {
         if (buff[0] == 'I' && buff[1] == 'D' && buff[2] == '3') {
             in.read(buff, 0, 3);
             in.read(buff, 0, 4);
-            size = (int) (buff[0] << 21) + (buff[1] << 14) + (buff[2] << 7)
-                    + buff[3];
+            size = (buff[0] << 21) + (buff[1] << 14) + (buff[2] << 7) + buff[3];
         }
         return size + 10;
     }
@@ -148,8 +142,7 @@ public final class Bitstream {
     /**
      * Reads and parses the next frame from the input source.
      * 
-     * @return the Header describing details of the frame read, or null if the
-     *         end of the stream has been reached.
+     * @return the Header describing details of the frame read, or null if the end of the stream has been reached.
      * @throws IOException
      */
     public Header readFrame() throws IOException {
@@ -168,7 +161,7 @@ public final class Bitstream {
     private Header readNextFrame() throws IOException {
         if (frameSize == -1) {
             while (true) {
-                boolean ok = header.readHeader(this);           
+                boolean ok = header.readHeader(this);
                 if (ok) {
                     break;
                 }
@@ -195,10 +188,7 @@ public final class Bitstream {
      */
     boolean isSyncCurrentPosition(int syncMode) throws IOException {
         int read = readBytes(syncBuffer, 0, 4);
-        int headerString = ((syncBuffer[0] << 24) & 0xFF000000)
-                | ((syncBuffer[1] << 16) & 0x00FF0000)
-                | ((syncBuffer[2] << 8) & 0x0000FF00)
-                | ((syncBuffer[3] << 0) & 0x000000FF);
+        int headerString = ((syncBuffer[0] << 24) & 0xFF000000) | ((syncBuffer[1] << 16) & 0x00FF0000) | ((syncBuffer[2] << 8) & 0x0000FF00) | ((syncBuffer[3] << 0) & 0x000000FF);
         try {
             source.unread(syncBuffer, 0, read);
         } catch (IOException ex) {
@@ -214,9 +204,8 @@ public final class Bitstream {
     }
 
     /**
-     * Get next 32 bits from bitstream. They are stored in the headerstring.
-     * syncmod allows Synchro flag ID The returned value is False at the end of
-     * stream.
+     * Get next 32 bits from bitstream. They are stored in the headerstring. syncmod allows Synchro flag ID The returned
+     * value is False at the end of stream.
      * 
      * @param syncMode
      */
@@ -228,9 +217,7 @@ public final class Bitstream {
         if (bytesRead != 3) {
             throw new EOFException();
         }
-        headerString = ((syncBuffer[0] << 16) & 0x00FF0000)
-                | ((syncBuffer[1] << 8) & 0x0000FF00)
-                | ((syncBuffer[2] << 0) & 0x000000FF);
+        headerString = ((syncBuffer[0] << 16) & 0x00FF0000) | ((syncBuffer[1] << 8) & 0x0000FF00) | ((syncBuffer[2] << 0) & 0x000000FF);
         do {
             headerString <<= 8;
             if (readBytes(syncBuffer, 3, 1) != 1)
@@ -246,8 +233,7 @@ public final class Bitstream {
         if (syncMode == INITIAL_SYNC) {
             sync = ((headerString & 0xFFE00000) == 0xFFE00000); // SZD: MPEG 2.5
         } else {
-            sync = ((headerString & 0xFFF80C00) == word)
-                    && (((headerString & 0x000000C0) == 0x000000C0) == singleChMode);
+            sync = ((headerString & 0xFFF80C00) == word) && (((headerString & 0x000000C0) == 0x000000C0) == singleChMode);
         }
         // filter out invalid sample rate
         if (sync)
@@ -262,8 +248,7 @@ public final class Bitstream {
     }
 
     /**
-     * Reads the data for the next frame. The frame is not parsed until parse
-     * frame is called.
+     * Reads the data for the next frame. The frame is not parsed until parse frame is called.
      */
     int readFrameData(int byteSize) throws IOException {
         int numread = 0;
@@ -294,17 +279,15 @@ public final class Bitstream {
                 b2 = byteRead[k + 2];
             if (k + 3 < byteSize)
                 b3 = byteRead[k + 3];
-            frameBuffer[b++] = ((b0 << 24) & 0xFF000000)
-                    | ((b1 << 16) & 0x00FF0000) | ((b2 << 8) & 0x0000FF00)
-                    | (b3 & 0x000000FF);
+            frameBuffer[b++] = ((b0 << 24) & 0xFF000000) | ((b1 << 16) & 0x00FF0000) | ((b2 << 8) & 0x0000FF00) | (b3 & 0x000000FF);
         }
         wordPointer = 0;
         bitIndex = 0;
     }
 
     /**
-     * Read bits from buffer into the lower bits of an unsigned int. The LSB
-     * contains the latest read bit of the stream. (1 <= numberOfBits <= 16)
+     * Read bits from buffer into the lower bits of an unsigned int. The LSB contains the latest read bit of the stream.
+     * (1 <= numberOfBits <= 16)
      */
     int getBits(int numberOfBits) {
         int returnValue = 0;
@@ -316,8 +299,7 @@ public final class Bitstream {
         }
         if (sum <= 32) {
             // all bits contained in *wordpointer
-            returnValue = (frameBuffer[wordPointer] >>> (32 - sum))
-                    & BITMASK[numberOfBits];
+            returnValue = (frameBuffer[wordPointer] >>> (32 - sum)) & BITMASK[numberOfBits];
             if ((bitIndex += numberOfBits) == 32) {
                 bitIndex = 0;
                 wordPointer++;
@@ -327,8 +309,7 @@ public final class Bitstream {
         int right = (frameBuffer[wordPointer] & 0x0000FFFF);
         wordPointer++;
         int left = (frameBuffer[wordPointer] & 0xFFFF0000);
-        returnValue = ((right << 16) & 0xFFFF0000)
-                | ((left >>> 16) & 0x0000FFFF);
+        returnValue = ((right << 16) & 0xFFFF0000) | ((left >>> 16) & 0x0000FFFF);
         returnValue >>>= 48 - sum;
         returnValue &= BITMASK[numberOfBits];
         bitIndex = sum - 32;
@@ -344,20 +325,13 @@ public final class Bitstream {
     }
 
     /**
-     * Reads the exact number of bytes from the source input stream into a byte
-     * array.
+     * Reads the exact number of bytes from the source input stream into a byte array.
      * 
-     * @param b
-     *            The byte array to read the specified number of bytes into.
-     * @param offs
-     *            The index in the array where the first byte read should be
-     *            stored.
-     * @param len
-     *            the number of bytes to read.
+     * @param b The byte array to read the specified number of bytes into.
+     * @param offs The index in the array where the first byte read should be stored.
+     * @param len the number of bytes to read.
      * 
-     * @exception Exception
-     *                is thrown if the specified number of bytes could not be
-     *                read from the stream.
+     * @exception Exception is thrown if the specified number of bytes could not be read from the stream.
      */
     private int readFully(byte[] b, int offs, int len) throws IOException {
         // TODO does not in fact throw an exception, probably return not required
