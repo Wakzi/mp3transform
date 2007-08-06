@@ -14,6 +14,7 @@ public class PlayerThread implements Runnable {
     private ArrayList fileList;
     private Thread thread;
     private boolean stop;
+    private Player player;
 
     public void stopPlaying() {
         stop = true;
@@ -25,8 +26,9 @@ public class PlayerThread implements Runnable {
         }
     }
     
-    public static PlayerThread startPlaying(File file, ArrayList list) {
+    public static PlayerThread startPlaying(Player player, File file, ArrayList list) {
         PlayerThread t = new PlayerThread();
+        t.player = player;
         t.currentFile = file;
         t.fileList = list;
         Thread thread = new Thread(t);
@@ -49,12 +51,14 @@ public class PlayerThread implements Runnable {
                     play(currentFile);
                 }
             }
+            player.setCurrentFile(null);
         } catch(IOException e) {
             e.printStackTrace();
         }
     }
     
     private void play(File file) throws IOException {
+        player.setCurrentFile(file);
         stop = false;
         if (!file.getName().endsWith(".mp3")) {
             return;

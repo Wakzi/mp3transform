@@ -29,8 +29,18 @@ import mp3.Decoder;
 
 public class WavConverter extends Decoder {
     public static void main(String[] args) throws Exception {
-        WavConverter.convert("c:\\temp\\01-Where I Stood.mp3",
-                "c:\\temp\\testout.wav");
+        String in = "in.mp3";
+        String out = "out.wav";
+        for(int i=0; i<args.length; i++) {
+            if("-in".equals(args[i])) {
+                in = args[++i];
+            } else if("-in".equals(args[i])) {
+                out = args[++i];
+            } else {
+                System.out.println("Options: -in <input.mp3> -out <output.wav>");
+            }
+        }
+        WavConverter.convert(in, out);
     }
 
     private static void convert(String sourceFileName, String destFileName)

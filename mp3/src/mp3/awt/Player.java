@@ -8,6 +8,7 @@ import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
+import java.awt.Label;
 import java.awt.List;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
@@ -24,15 +25,21 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.prefs.Preferences;
 
 public class Player implements ActionListener, MouseListener {
 
     private Font font;
     private Image icon;
     private String TITLE = "MP3 Player";
+    private File dir;
     private File[] files;
     private List list;
     private PlayerThread thread;
+    private boolean useSystemTray;
+    private Frame frame;
+    private Preferences prefs = Preferences.userNodeForPackage(getClass());
+    private Label playing;
 
     /**
      * The command line interface for this tool.
@@ -43,8 +50,6 @@ public class Player implements ActionListener, MouseListener {
      */
     public static void main(String[] args) throws Exception {
         new Player().run(args);
-        // TODO don't open multiple windows
-        // TODO show current playing song (file name and time played)
     }
 
     private void run(String[] args) {
@@ -56,8 +61,11 @@ public class Player implements ActionListener, MouseListener {
                     byte[] imageData = readBytesAndClose(in, -1);
                     icon = Toolkit.getDefaultToolkit().createImage(imageData);
                 }
-                boolean icon = createTrayIcon();
-                open(!icon);
+                useSystemTray = createTrayIcon();
+                createFrame();
+                open();
+                readDirectory();
+                readFiles(dir);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -131,14 +139,10 @@ public class Player implements ActionListener, MouseListener {
         if ("exit".equals(command)) {
             System.exit(0);
         } else if ("back".equals(command)) {
-            File f = files[0];
-            if(f != null) {
-                File parent = f.getParentFile();
-                if(parent == null || parent.getParentFile() == null) {
-                    readFiles(File.listRoots());
-                } else {
-                    readFiles(parent.getParentFile().listFiles());
-                }
+            if(dir == null) {
+                readFiles(null);
+            } else {
+                readFiles(dir.getParentFile());
             }
         } else if ("skip".equals(command)) {
         } else if ("play".equals(command)) {
@@ -150,16 +154,12 @@ public class Player implements ActionListener, MouseListener {
             if(thread != null) {
                 thread.stopPlaying();
             }
-//        } else if ("pause".equals(command)) {
-//            int todo;
         } else if ("next".equals(command)) {
             if(thread != null) {
                 thread.playNext();
             }
-//        } else if ("skip".equals(command)) {
-//            int todo;
         } else if ("open".equals(command)) {
-            open(false);
+            open();
         }
     }
     
@@ -171,14 +171,14 @@ public class Player implements ActionListener, MouseListener {
         return files[index];
     }
     
-    private void open(final boolean exit) {
-        final Frame frame = new Frame(TITLE);
+    private void createFrame() {
+        frame = new Frame(TITLE);
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent we) {
-                if(exit) {
-                    System.exit(0);
+                if(useSystemTray) {
+                    frame.setVisible(false);
                 } else {
-                    frame.dispose();
+                    System.exit(0);
                 }
             }
         });
@@ -212,23 +212,13 @@ public class Player implements ActionListener, MouseListener {
                 File f = getSelectedFile();
                 if(f != null) {
                     if(f.isDirectory()) {
-                        readFiles(f.listFiles());
+                        readFiles(f);
                     } else if(isMp3(f)) {
                         play(f);
                     }
                 }
             }
         });
-        // TODO store last directory
-        File f = new File("C:/music");
-        if(!f.exists() || f.isFile()) {
-            f = new File("D:/music");
-        }
-        if(!f.exists() || f.isFile()) {
-            f = new File("/");
-        }
-        readFiles(f.listFiles());
-
         
         Button back = new Button("Up");
         back.setFocusable(false);
@@ -266,43 +256,38 @@ public class Player implements ActionListener, MouseListener {
         c.gridwidth = GridBagConstraints.REMAINDER;
         frame.add(stop, c);
 
-        
-        
-        
-//        Label label = new Label("Playing:", Label.LEFT);
-//        label.setFont(font);
         list.setFont(font);
         c.anchor = GridBagConstraints.CENTER;
-//        c.gridwidth = GridBagConstraints.EAST;
         c.gridwidth = GridBagConstraints.REMAINDER;
-//        frame.add(label, c);
-
         frame.add(list, c);
-        
-        //
-//        TextField text = new TextField();
-//        text.setEditable(false);
-//        text.setFont(font);
-//        text.setText(web.getURL());
-//        text.setFocusable(false);
-//        c.anchor = GridBagConstraints.EAST;
-//        c.gridwidth = GridBagConstraints.REMAINDER;
-//        frame.add(text, c);
-//        
-//        Label label2 = new Label();
-//        c.anchor = GridBagConstraints.WEST;
-//        c.gridwidth = GridBagConstraints.EAST;
-//        frame.add(label2, c);
+
+        c.anchor = GridBagConstraints.WEST;
+        c.gridwidth = GridBagConstraints.REMAINDER;
+        playing = new Label("                                                              ");
+        playing.setAlignment(Label.LEFT);
+        playing.setFont(font);
+        frame.add(playing, c);
 
         int width = 250, height = 300;
         frame.setSize(width, height);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         frame.setLocation((screenSize.width - width) / 2, (screenSize.height - height) / 2);
+        
+        readFiles(dir);
+        
+    }
+    
+    private void open() {
         frame.setVisible(true);
-
     }
 
-    private void readFiles(File[] f) {
+    private void readFiles(File dir) {
+        File[] f;
+        if(dir == null) {
+            f = File.listRoots();
+        } else {
+            f = dir.listFiles();
+        }
         if(f.length == 0) {
             return;
         }
@@ -320,6 +305,9 @@ public class Player implements ActionListener, MouseListener {
         list.removeAll();
         this.files = new File[fileList.size()];
         fileList.toArray(files);
+        this.dir = dir;
+        saveDirectory();
+        list.removeAll();
         for(int i=0; i<files.length; i++) {
             File f2 = files[i];
             if(isMp3(f2) || f2.isDirectory()) {
@@ -332,13 +320,29 @@ public class Player implements ActionListener, MouseListener {
         }
     }
     
+    private void readDirectory() {
+        String s = prefs.get("dir", null);
+        if(s != null) {
+            File f = new File(s);
+            if(f.exists()) {
+                dir = f;
+            }
+        }
+    }
+    
+    private void saveDirectory() {
+        if(dir != null) {
+            prefs.put("dir", dir.getAbsolutePath());
+        }
+    }
+    
     private void play(File f) {
         if(isMp3(f)) {
             if(thread != null) {
                 thread.stopPlaying();
                 thread = null;
             }
-            thread = PlayerThread.startPlaying(f, null);
+            thread = PlayerThread.startPlaying(this, f, null);
         } else if(f.isDirectory()) {
             ArrayList files = new ArrayList();
             addAll(files, f);
@@ -353,7 +357,7 @@ public class Player implements ActionListener, MouseListener {
                     thread.stopPlaying();
                     thread = null;
                 }
-                thread = PlayerThread.startPlaying(null, files);
+                thread = PlayerThread.startPlaying(this, null, files);
             }
         }
     }
@@ -376,7 +380,7 @@ public class Player implements ActionListener, MouseListener {
 
     public void mouseClicked(MouseEvent e) {
         if(e.getButton() == MouseEvent.BUTTON1) {
-            open(false);
+            open();
         }
     }
 
@@ -413,6 +417,11 @@ public class Player implements ActionListener, MouseListener {
         } finally {
             in.close();
         }
+    }
+
+    public void setCurrentFile(File file) {
+        String name = file == null ? "" : file.getName();
+        playing.setText(name);
     }
 
 }
