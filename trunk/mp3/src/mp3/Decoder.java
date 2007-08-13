@@ -187,8 +187,7 @@ public class Decoder {
                 if (header == null)
                     break;
                 if (decoder.channels == 0) {
-                    int channels = (header.mode() == Header.MODE_SINGLE_CHANNEL) ? 1
-                            : 2;
+                    int channels = (header.mode() == Header.MODE_SINGLE_CHANNEL) ? 1 : 2;
                     float sampleRate = header.frequency();
                     int sampleSize = 16;
                     AudioFormat format = new AudioFormat(
@@ -204,6 +203,8 @@ public class Decoder {
                     } else {
                         decoder.initOutputBuffer(line, channels);
                     }
+                    // TODO sometimes the line can not be opened (maybe not enough system resources?): display error message
+                    // System.out.println(line.getFormat().toString());
                     line.open(format);
                     line.start();
                 }
@@ -212,6 +213,7 @@ public class Decoder {
                 if (error++ > 10) {
                     break;
                 }
+                e.printStackTrace();
 //                System.out.println("File: " + file + " Frame: " + frame + " Error: " + e.toString());
 //                 e.printStackTrace();
 //                 System.out.println("File: " + file);
