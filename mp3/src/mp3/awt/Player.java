@@ -263,12 +263,22 @@ public class Player implements ActionListener, MouseListener {
 
         c.anchor = GridBagConstraints.WEST;
         c.gridwidth = GridBagConstraints.REMAINDER;
-        playing = new Label("                                                              ");
+        playing = new Label() {
+            private static final long serialVersionUID = 1L;
+            public Dimension getMinimumSize() {
+                Dimension d = super.getMinimumSize();
+                d.width = 200;
+                return d;
+            }
+            public Dimension getPreferredSize() {
+                return getMinimumSize();
+            }
+        };
         playing.setAlignment(Label.LEFT);
         playing.setFont(font);
         frame.add(playing, c);
 
-        int width = 250, height = 300;
+        int width = 250, height = 320;
         frame.setSize(width, height);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         frame.setLocation((screenSize.width - width) / 2, (screenSize.height - height) / 2);
