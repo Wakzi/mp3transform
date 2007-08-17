@@ -731,7 +731,7 @@ final class Layer3Decoder {
         return;
     }
 
-    private void reorder(double xr[][], int ch, int gr) {
+    private void reorder(double[][] xr, int ch, int gr) {
         GrInfo gi = si.ch[ch].gr[gr];
         if (gi.windowSwitching && gi.blockType == 2) {
             for (int index = 0; index < 576; index++)
@@ -1237,7 +1237,7 @@ final class Layer3Decoder {
             //
             // It is a simple "factorization" of the IDCT matrix.
             // 9 point IDCT on even indices
-            // 5 points on odd indices (not realy an IDCT)
+            // 5 points on odd indices (not really an IDCT)
             double i00 = in[0] + in[0];
             double iip12 = i00 + in[12];
             tmp0 = iip12 + in[4] * 1.8793852415718f + in[8] * 1.532088886238f
@@ -1258,7 +1258,7 @@ final class Layer3Decoder {
             tmp3b = in[2] * 0.68404028665134f - i66_ + in[10]
                     * 1.9696155060244f - in[14] * 1.2855752193731f;
             // 9 point IDCT on odd indices
-            // 5 points on odd indices (not realy an IDCT)
+            // 5 points on odd indices (not really an IDCT)
             double i0 = in[0 + 1] + in[0 + 1];
             double i0p12 = i0 + in[12 + 1];
             tmp0o = i0p12 + in[4 + 1] * 1.8793852415718f + in[8 + 1]
