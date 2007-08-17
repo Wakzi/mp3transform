@@ -1,6 +1,7 @@
 package mp3.awt;
 
 import java.awt.Button;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
@@ -312,11 +313,13 @@ public class Player implements ActionListener, MouseListener {
         if(fileList.size() == 0) {
             return;
         }
-        list.removeAll();
         this.files = new File[fileList.size()];
         fileList.toArray(files);
         this.dir = dir;
         saveDirectory();
+        Color fg = list.getForeground();
+        list.setForeground(list.getBackground());
+        list.setFocusable(false);
         list.removeAll();
         for(int i=0; i<files.length; i++) {
             File f2 = files[i];
@@ -328,6 +331,9 @@ public class Player implements ActionListener, MouseListener {
                 list.add(name);
             }
         }
+        list.setForeground(fg);
+        list.setFocusable(true);
+        list.requestFocus();
     }
     
     private void readDirectory() {
