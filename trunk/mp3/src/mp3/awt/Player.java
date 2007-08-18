@@ -63,9 +63,9 @@ public class Player implements ActionListener, MouseListener {
                     icon = Toolkit.getDefaultToolkit().createImage(imageData);
                 }
                 useSystemTray = createTrayIcon();
+                readDirectory();
                 createFrame();
                 open();
-                readDirectory();
                 readFiles(dir);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -294,7 +294,8 @@ public class Player implements ActionListener, MouseListener {
 
     private void readFiles(File dir) {
         File[] f;
-        if(dir == null) {
+        boolean roots = dir == null;
+        if(roots) {
             f = File.listRoots();
         } else {
             f = dir.listFiles();
@@ -306,7 +307,7 @@ public class Player implements ActionListener, MouseListener {
         ArrayList fileList = new ArrayList();
         for(int i=0; i<f.length; i++) {
             File f2 = f[i];
-            if(isMp3(f2) || f2.isDirectory()) {
+            if(roots || isMp3(f2) || f2.isDirectory()) {
                 fileList.add(f2);
             }
         }
@@ -316,14 +317,18 @@ public class Player implements ActionListener, MouseListener {
         this.files = new File[fileList.size()];
         fileList.toArray(files);
         this.dir = dir;
-        saveDirectory();
+        if(roots) {
+            prefs.remove("dir");
+        } else {
+            prefs.put("dir", dir.getAbsolutePath());
+        }
         Color fg = list.getForeground();
         list.setForeground(list.getBackground());
         list.setFocusable(false);
         list.removeAll();
         for(int i=0; i<files.length; i++) {
             File f2 = files[i];
-            if(isMp3(f2) || f2.isDirectory()) {
+            if(roots || isMp3(f2) || f2.isDirectory()) {
                 String name = f2.getName().trim();
                 if(name.length() == 0) {
                     name = f2.getAbsolutePath();
@@ -345,13 +350,7 @@ public class Player implements ActionListener, MouseListener {
             }
         }
     }
-    
-    private void saveDirectory() {
-        if(dir != null) {
-            prefs.put("dir", dir.getAbsolutePath());
-        }
-    }
-    
+
     private void play(File f) {
         if(isMp3(f)) {
             if(thread != null) {
