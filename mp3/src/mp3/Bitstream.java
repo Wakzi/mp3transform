@@ -86,24 +86,23 @@ public final class Bitstream {
     private boolean firstFrame = true;
 
     public Bitstream(InputStream in) {
-        loadID3v2(in);
-        firstFrame = true;
         source = new PushbackInputStream(in, BUFFER_INT_SIZE * 4);
+        loadID3v2();
         closeFrame();
     }
 
-    private void loadID3v2(InputStream in) {
+    private void loadID3v2() {
         int size = -1;
         try {
             // read ID3v2 header
-            in.mark(10);
-            size = readID3v2Header(in);
+            source.mark(10);
+            size = readID3v2Header();
         } catch (IOException e) {
             // ignore
         } finally {
             try {
                 // unread ID3v2 header
-                in.reset();
+                source.reset();
             } catch (IOException e) {
                 // ignore
             }
@@ -112,7 +111,7 @@ public final class Bitstream {
         try {
             if (size > 0) {
                 rawID3v2 = new byte[size];
-                in.read(rawID3v2, 0, rawID3v2.length);
+                this.readBytes(rawID3v2, 0, rawID3v2.length);
             }
         } catch (IOException e) {
             // ignore
@@ -127,13 +126,13 @@ public final class Bitstream {
      * @throws IOException
      * @author JavaZOOM
      */
-    private int readID3v2Header(InputStream in) throws IOException {
+    private int readID3v2Header() throws IOException {
         byte[] buff = new byte[4];
         int size = -10;
-        in.read(buff, 0, 3);
+        readBytes(buff, 0, 3);
         if (buff[0] == 'I' && buff[1] == 'D' && buff[2] == '3') {
-            in.read(buff, 0, 3);
-            in.read(buff, 0, 4);
+            readBytes(buff, 0, 3);
+            readBytes(buff, 0, 4);
             size = (buff[0] << 21) + (buff[1] << 14) + (buff[2] << 7) + buff[3];
         }
         return size + 10;
