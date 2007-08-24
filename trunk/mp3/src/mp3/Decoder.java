@@ -16,9 +16,6 @@
  */
 package mp3;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.sound.sampled.AudioFormat;
@@ -69,54 +66,51 @@ public class Decoder {
 //        System.out.println(System.currentTimeMillis() - time);
 //    }
     
-    public static void main(String[] a) throws Exception {
-        Decoder decoder = new Decoder();
-        BENCHMARK = false;
-        for (int i = 0; i < a.length; i++) {
-            decoder.playAll(new File(a[i]));
-        }
-        BENCHMARK = false;
-        decoder.mainTest();
-        // System.out.println(Layer3Decoder.count);
+//    public static void main(String[] a) throws Exception {
+//        Decoder decoder = new Decoder();
+//        BENCHMARK = false;
+//        for (int i = 0; i < a.length; i++) {
+//            decoder.playAll(new File(a[i]));
+//        }
+//        BENCHMARK = false;
+//        decoder.mainTest();
+//        System.out.println(Layer3Decoder.count);
 //        mainTest();
-        // TODO why is System.exit required for JDK 1.4?
-        System.exit(0);
-        // 23844 24454
-        // mainTest();
-        // mainTest();
-    }
+//        System.exit(0);
+//        mainTest();
+//        mainTest();
+//    }
 
-    private void mainTest() throws Exception {
-        long time = System.currentTimeMillis();
+// private void mainTest() throws Exception {
+//        long time = System.currentTimeMillis();
 //        play(new File("C:/temp/01-Where I Stood.mp3"));
 //        play(new File("C:/music/Missy Higgins/On A Clear Night/05-Secret.mp3"));
-//         playAll(new File("C:/music/Missy Higgins/On A Clear Night"));
-         playAll(new File("C:/music/Vanessa-Mae"));
-        // playAll(new File("C:/music/s"));
-//         playAll(new File("C:/music/s/Shakira/Shakira - Grandes Exitos - Ojos Asì.mp3"));
-//         playAll(new File("C:/music/o/Orishas - El Kilo - El Kilo.mp3"));
-//         playAll(new File("C:/music/s/Shakira"));
-        // playAll(new File("C:/music"));
-        System.out.println("done in " + (System.currentTimeMillis() - time));
-        // 7125 6016
-    }
+//        playAll(new File("C:/music/Missy Higgins/On A Clear Night"));
+//        playAll(new File("C:/music/Vanessa-Mae"));
+//        playAll(new File("C:/music/s"));
+//        playAll(new File("C:/music/s/Shakira/Shakira - Grandes Exitos - Ojos Asì.mp3"));
+//        playAll(new File("C:/music/o/Orishas - El Kilo - El Kilo.mp3"));
+//        playAll(new File("C:/music/s/Shakira"));
+//        playAll(new File("C:/music"));
+//        System.out.println("done in " + (System.currentTimeMillis() - time));
+//    }
     
-    private void playAll(File file) throws Exception {
-        if (file.isDirectory()) {
-            File[] list = file.listFiles();
-            for (int i = 0; i < list.length; i++) {
-                File temp = list[i];
-                int x = (int) (Math.random() * list.length);
-                list[i] = list[x];
-                list[x] = temp;
-            }
-            for (int i = 0; i < list.length; i++) {
-                playAll(list[i]);
-            }
-        } else {
-            play(new BufferedInputStream(new FileInputStream(file), 4 * 1024));
-        }
-    }
+//    private void playAll(File file) throws Exception {
+//        if (file.isDirectory()) {
+//            File[] list = file.listFiles();
+//            for (int i = 0; i < list.length; i++) {
+//                File temp = list[i];
+//                int x = (int) (Math.random() * list.length);
+//                list[i] = list[x];
+//                list[x] = temp;
+//            }
+//            for (int i = 0; i < list.length; i++) {
+//                playAll(list[i]);
+//            }
+//        } else {
+//            play(new BufferedInputStream(new FileInputStream(file), 4 * 1024));
+//        }
+//    }
     
     public void decodeFrame(Header header, Bitstream stream) throws IOException {
         if (!initialized) {
