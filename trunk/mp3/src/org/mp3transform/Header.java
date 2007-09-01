@@ -29,7 +29,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *----------------------------------------------------------------------
  */
-package mp3;
+package org.mp3transform;
 
 import java.io.IOException;
 
@@ -62,13 +62,15 @@ public final class Header {
             int headerString = stream.syncHeader(syncMode);
             if (syncMode == Bitstream.INITIAL_SYNC) {
                 version = ((headerString >>> 19) & 1);
-                if (((headerString >>> 20) & 1) == 0)
+                if (((headerString >>> 20) & 1) == 0) {
                     if (version == VERSION_MPEG2_LSF) {
                         version = VERSION_MPEG25_LSF;
                     } else {
                         throw new IOException("Unsupported version: " + version);
                     }
-                if ((sampleFrequency = ((headerString >>> 10) & 3)) == 3) {
+                }
+                sampleFrequency = ((headerString >>> 10) & 3);
+                if (sampleFrequency == 3) {
                     throw new IOException("Unsupported sampleFrequency: "
                             + sampleFrequency);
                 }
@@ -90,23 +92,28 @@ public final class Header {
             // calculate number of subbands:
             int channelBitrate = bitrateIndex;
             // calculate bitrate per channel:
-            if (mode != MODE_SINGLE_CHANNEL)
-                if (channelBitrate == 4)
+            if (mode != MODE_SINGLE_CHANNEL) {
+                if (channelBitrate == 4) {
                     channelBitrate = 1;
-                else
+                } else {
                     channelBitrate -= 4;
-            if (channelBitrate == 1 || channelBitrate == 2)
-                if (sampleFrequency == SAMPLE_FREQUENCY_THIRTYTWO)
+                }
+            }
+            if (channelBitrate == 1 || channelBitrate == 2) {
+                if (sampleFrequency == SAMPLE_FREQUENCY_THIRTYTWO) {
                     numberOfSubbands = 12;
-                else
+                } else {
                     numberOfSubbands = 8;
-            else if (sampleFrequency == SAMPLE_FREQUENCY_FOURTYEIGHT
-                    || (channelBitrate >= 3 && channelBitrate <= 5))
+                }
+            } else if (sampleFrequency == SAMPLE_FREQUENCY_FOURTYEIGHT
+                    || (channelBitrate >= 3 && channelBitrate <= 5)) {
                 numberOfSubbands = 27;
-            else
+            } else {
                 numberOfSubbands = 30;
-            if (intensityStereoBound > numberOfSubbands)
+            }
+            if (intensityStereoBound > numberOfSubbands) {
                 intensityStereoBound = numberOfSubbands;
+            }
             calculateFramesize();
             int frameSizeLoaded = stream.readFrameData(frameSize);
             if (frameSize >= 0 && frameSizeLoaded != frameSize) {
@@ -136,15 +143,17 @@ public final class Header {
         byte[] tmp = new byte[4];
         int offset;
         if (version == VERSION_MPEG1) {
-            if (mode == MODE_SINGLE_CHANNEL)
+            if (mode == MODE_SINGLE_CHANNEL) {
                 offset = 21 - 4;
-            else
+            } else {
                 offset = 36 - 4;
+            }
         } else {
-            if (mode == MODE_SINGLE_CHANNEL)
+            if (mode == MODE_SINGLE_CHANNEL) {
                 offset = 13 - 4;
-            else
+            } else {
                 offset = 21 - 4;
+            }
         }
         try {
             System.arraycopy(firstFrame, offset, tmp, 0, 4);

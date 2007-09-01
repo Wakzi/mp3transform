@@ -17,24 +17,25 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *----------------------------------------------------------------------
  */
-package mp3.wav;
+package org.mp3transform.wav;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import mp3.Bitstream;
-import mp3.Header;
-import mp3.Decoder;
+
+import org.mp3transform.Bitstream;
+import org.mp3transform.Decoder;
+import org.mp3transform.Header;
 
 public class WavConverter extends Decoder {
     public static void main(String[] args) throws Exception {
         String in = "in.mp3";
         String out = "out.wav";
-        for(int i=0; i<args.length; i++) {
-            if("-in".equals(args[i])) {
+        for (int i = 0; i < args.length; i++) {
+            if ("-in".equals(args[i])) {
                 in = args[++i];
-            } else if("-in".equals(args[i])) {
+            } else if ("-in".equals(args[i])) {
                 out = args[++i];
             } else {
                 System.out.println("Options: -in <input.mp3> -out <output.wav>");
@@ -60,8 +61,9 @@ public class WavConverter extends Decoder {
         try {
             for (int frame = 0; frame < frameCount; frame++) {
                 Header header = stream.readFrame();
-                if (header == null)
+                if (header == null) {
                     break;
+                }
                 if (decoder.channels == 0) {
                     int channels = (header.mode() == Header.MODE_SINGLE_CHANNEL) ? 1
                             : 2;
@@ -83,8 +85,9 @@ public class WavConverter extends Decoder {
             throws IOException {
         super.initOutputBuffer(null, numberOfChannels);
         buffer = new short[BUFFER_SIZE];
-        for (int i = 0; i < numberOfChannels; ++i)
+        for (int i = 0; i < numberOfChannels; ++i) {
             bufferPointer[i] = (short) i;
+        }
         outWave = new WaveFileWriter(fileName, freq, (short) 16,
                 (short) numberOfChannels);
     }
@@ -103,8 +106,9 @@ public class WavConverter extends Decoder {
 
     public void writeBuffer() throws IOException {
         outWave.writeData(buffer, bufferPointer[0]);
-        for (int i = 0; i < channels; ++i)
+        for (int i = 0; i < channels; ++i) {
             bufferPointer[i] = i;
+        }
     }
 
     public void close() throws IOException {

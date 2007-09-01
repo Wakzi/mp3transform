@@ -1,11 +1,12 @@
-package mp3.awt;
+package org.mp3transform.awt;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import mp3.Decoder;
+
+import org.mp3transform.Decoder;
 
 public class PlayerThread implements Runnable {
 
@@ -39,20 +40,20 @@ public class PlayerThread implements Runnable {
     
     public void run() {
         try {
-            while(!stop) {
-                if(currentFile == null) {
-                    if(fileList != null && fileList.size() > 0) {
+            while (!stop) {
+                if (currentFile == null) {
+                    if (fileList != null && fileList.size() > 0) {
                         currentFile = (File) fileList.remove(0);
                     }
                 }
-                if(currentFile == null) {
+                if (currentFile == null) {
                     break;
                 } else {
                     play(currentFile);
                 }
             }
             player.setCurrentFile(null);
-        } catch(IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

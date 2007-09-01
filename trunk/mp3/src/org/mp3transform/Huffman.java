@@ -1,7 +1,7 @@
 /*
  * 11/19/04 1.0 moved to LGPL.
  * 16/11/99 Renamed class, added javadoc, and changed table
- *			name from String to 3 chars. mdm@techie.com
+ * name from String to 3 chars. mdm@techie.com
  * 02/15/99 Java Conversion by E.B, javalayer@javazoom.net
  *
  * 04/19/97 : Adapted from the ISO MPEG Audio Subgroup Software Simulation
@@ -17,9 +17,9 @@
  * VERSION 4.1                                                        
  *   changes made since last update:                                  
  *   date   programmers         comment                        
- *  27.2.92 F.O.Witte (ITT Intermetall)				                  
+ *  27.2.92 F.O.Witte (ITT Intermetall)
  *  8/24/93 M. Iwadare          Changed for 1 pass decoding.          
- *  7/14/94 J. Koller		    useless 'typedef' before huffcodetab  removed
+ *  7/14/94 J. Koller useless 'typedef' before huffcodetab  removed
  *-----------------------------------------------------------------------
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Library General Public License as published
@@ -36,7 +36,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *----------------------------------------------------------------------
  */
-package mp3;
+package org.mp3transform;
 
 final class Huffman {
     private static final int MX_OFF = 250;
@@ -60,7 +60,7 @@ final class Huffman {
         this.linbits = linbits;
         val0 = new int[val.length];
         val1 = new int[val.length];
-        for(int i=0; i<val.length; i++) {
+        for (int i = 0; i < val.length; i++) {
             val0[i] = val[i][0];
             val1[i] = val[i][1];
         }
@@ -95,12 +95,14 @@ final class Huffman {
                 break;
             }
             if (br.getOneBit() != 0) {
-                while (val1[point] >= MX_OFF)
+                while (val1[point] >= MX_OFF) {
                     point += val1[point];
+                }
                 point += val1[point];
             } else {
-                while (val0[point] >= MX_OFF)
+                while (val0[point] >= MX_OFF) {
                     point += val0[point];
+                }
                 point += val0[point];
             }
             level >>>= 1;
@@ -113,34 +115,50 @@ final class Huffman {
             decoder.y = decoder.y & 1;
             // v, w, x and y are reversed in the bitstream
             // switch them around to make test bistream work.
-            if (decoder.v != 0)
-                if (br.getOneBit() != 0)
+            if (decoder.v != 0) {
+                if (br.getOneBit() != 0) {
                     decoder.v = -decoder.v;
-            if (decoder.w != 0)
-                if (br.getOneBit() != 0)
+                }
+            }
+            if (decoder.w != 0) {
+                if (br.getOneBit() != 0) {
                     decoder.w = -decoder.w;
-            if (decoder.x != 0)
-                if (br.getOneBit() != 0)
+                }
+            }
+            if (decoder.x != 0) {
+                if (br.getOneBit() != 0) {
                     decoder.x = -decoder.x;
-            if (decoder.y != 0)
-                if (br.getOneBit() != 0)
+                }
+            }
+            if (decoder.y != 0) {
+                if (br.getOneBit() != 0) {
                     decoder.y = -decoder.y;
+                }
+            }
         } else {
             // Process sign and escape encodings for dual tables.
             // x and y are reversed in the test bitstream.
             // Reverse x and y here to make test bitstream work.
-            if (linbits != 0)
-                if ((xlen - 1) == decoder.x)
+            if (linbits != 0) {
+                if ((xlen - 1) == decoder.x) {
                     decoder.x += br.getBits(linbits);
-            if (decoder.x != 0)
-                if (br.getOneBit() != 0)
+                }
+            }
+            if (decoder.x != 0) {
+                if (br.getOneBit() != 0) {
                     decoder.x = -decoder.x;
-            if (linbits != 0)
-                if ((ylen - 1) == decoder.y)
+                }
+            }
+            if (linbits != 0) {
+                if ((ylen - 1) == decoder.y) {
                     decoder.y += br.getBits(linbits);
-            if (decoder.y != 0)
-                if (br.getOneBit() != 0)
+                }
+            }
+            if (decoder.y != 0) {
+                if (br.getOneBit() != 0) {
                     decoder.y = -decoder.y;
+                }
+            }
         }
         return error;
     }

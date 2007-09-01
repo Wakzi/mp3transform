@@ -14,7 +14,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *----------------------------------------------------------------------
  */
-package mp3;
+package org.mp3transform;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +24,7 @@ import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
 
 public class Decoder {
-    private static boolean BENCHMARK = false;
+    private static final boolean BENCHMARK = false;
     private SynthesisFilter filter1;
     private SynthesisFilter filter2;
     private Layer3Decoder l3decoder;
@@ -143,8 +143,7 @@ public class Decoder {
         int p = bufferPointer[channel];
         for (int i = 0; i < 32; i++) {
             double sample = f[i];
-            int s = (int)((sample > 32767.0f) ? 32767
-                    : ((sample < -32768.0f) ? -32768 : sample));
+            int s = (int) ((sample > 32767.0f) ? 32767 : ((sample < -32768.0f) ? -32768 : sample));
             buffer[p] = (byte) (s >> 8);
             buffer[p + 1] = (byte) (s & 0xff);
             p += 4;
@@ -178,8 +177,9 @@ public class Decoder {
         for (int frame = 0; !stop && frame < frameCount; frame++) {
             try {
                 Header header = stream.readFrame();
-                if (header == null)
+                if (header == null) {
                     break;
+                }
                 if (decoder.channels == 0) {
                     int channels = (header.mode() == Header.MODE_SINGLE_CHANNEL) ? 1 : 2;
                     float sampleRate = header.frequency();
@@ -217,7 +217,7 @@ public class Decoder {
             }
             decoder.close();
         }
-        if(error > 0) {
+        if (error > 0) {
             System.out.println("errors: " + error);
         }
         in.close();

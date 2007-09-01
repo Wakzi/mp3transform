@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="mp3" default="build" basedir=".">
+<project name="mp3transform" default="build" basedir=".">
     <target name="clean">
         <delete dir="bin"/>
         <mkdir dir="bin"/>
@@ -13,9 +13,9 @@
         </copy>
 		<mkdir dir="bin/META-INF"/>
 		<manifest file="bin/META-INF/MANIFEST.MF">
-			<attribute name="Main-Class" value="mp3.awt.Player"/>
+			<attribute name="Main-Class" value="org.mp3transform.awt.Player"/>
 		</manifest>    	
-		<jar jarfile="bin/mp3.jar" basedir="bin" manifest="bin/META-INF/MANIFEST.MF">
+		<jar jarfile="bin/mp3transform.jar" basedir="bin" manifest="bin/META-INF/MANIFEST.MF">
 			<include name="**/*.*"/>
     	</jar>
 		<delete includeemptydirs="true">
