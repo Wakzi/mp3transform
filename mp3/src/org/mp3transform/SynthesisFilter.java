@@ -28,7 +28,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *----------------------------------------------------------------------
  */
-package mp3;
+package org.mp3transform;
 
 /**
  * A class for the synthesis filter bank. This class does a fast downsampling from 32, 44.1 or 48 kHz to 8 kHz, if ULAW
@@ -214,16 +214,16 @@ final class SynthesisFilter {
         p15 = (pp14 - pp15) * cos1_4;
         // this is pretty insane coding
         double tmp1;
-        nv19/* 36-17 */= -(nv4 = (nv12 = p7) + p5) - p6;
-        nv27/* 44-17 */= -p6 - p7 - p4;
+        nv19 = -(nv4 = (nv12 = p7) + p5) - p6; // 36-17
+        nv27 = -p6 - p7 - p4; // 44-17
         nv6 = (nv10 = (nv14 = p15) + p11) + p13;
-        nv17/* 34-17 */= -(nv2 = p15 + p13 + p9) - p14;
-        nv21/* 38-17 */= (tmp1 = -p14 - p15 - p10 - p11) - p13;
-        nv29/* 46-17 */= -p14 - p15 - p12 - p8;
-        nv25/* 42-17 */= tmp1 - p12;
-        nv31/* 48-17 */= -p0;
+        nv17 = -(nv2 = p15 + p13 + p9) - p14; // 34-17
+        nv21 = (tmp1 = -p14 - p15 - p10 - p11) - p13; // 38-17
+        nv29 = -p14 - p15 - p12 - p8; // 46-17
+        nv25 = tmp1 - p12; // 42-17
+        nv31 = -p0; // 48-17
         nv0 = p1;
-        nv23/* 40-17 */= -(nv8 = p3) - p2;
+        nv23 = -(nv8 = p3) - p2; // 40-17
         p0 = (s0 - s31) * cos1_64;
         p1 = (s1 - s30) * cos3_64;
         p2 = (s2 - s29) * cos5_64;
@@ -309,17 +309,17 @@ final class SynthesisFilter {
         double tmp2;
         nv5 = (nv11 = (nv13 = (nv15 = p15) + p7) + p11) + p5 + p13;
         nv7 = (nv9 = p15 + p11 + p3) + p13;
-        nv16/* 33-17 */= -(nv1 = (tmp1 = p13 + p15 + p9) + p1) - p14;
-        nv18/* 35-17 */= -(nv3 = tmp1 + p5 + p7) - p6 - p14;
-        nv22/* 39-17 */= (tmp1 = -p10 - p11 - p14 - p15) - p13 - p2 - p3;
-        nv20/* 37-17 */= tmp1 - p13 - p5 - p6 - p7;
-        nv24/* 41-17 */= tmp1 - p12 - p2 - p3;
-        nv26/* 43-17 */= tmp1 - p12 - (tmp2 = p4 + p6 + p7);
-        nv30/* 47-17 */= (tmp1 = -p8 - p12 - p14 - p15) - p0;
-        nv28/* 45-17 */= tmp1 - tmp2;
+        nv16 = -(nv1 = (tmp1 = p13 + p15 + p9) + p1) - p14; // 33-17
+        nv18 = -(nv3 = tmp1 + p5 + p7) - p6 - p14; // 35-17
+        nv22 = (tmp1 = -p10 - p11 - p14 - p15) - p13 - p2 - p3; // 39-17
+        nv20 = tmp1 - p13 - p5 - p6 - p7; // 37-17
+        nv24 = tmp1 - p12 - p2 - p3; // 41-17
+        nv26 = tmp1 - p12 - (tmp2 = p4 + p6 + p7); // 43-17
+        nv30 = (tmp1 = -p8 - p12 - p14 - p15) - p0; // 47-17
+        nv28 = tmp1 - tmp2; // 45-17
         // insert V[0-15] (== nv[0-15]) into actual v:
         // double[] x2 = actual_v + actual_write_pos;
-        double dest[] = actualV;
+        double[] dest = actualV;
         int pos = actualWritePos;
         dest[0 + pos] = nv0;
         dest[16 + pos] = nv1;
@@ -608,7 +608,7 @@ final class SynthesisFilter {
         final double[] tmpOut = tmpOutBuffer;
         int dvp = 0;
         for (int i = 0; i < 32; i++) {
-            final double dp[] = D16[i];
+            final double[] dp = D16[i];
             double pcmSample = (((vp[15 + dvp] * dp[0]) + (vp[14 + dvp] * dp[1]) + (vp[13 + dvp] * dp[2]) + (vp[12 + dvp] * dp[3]) + (vp[11 + dvp] * dp[4])
                     + (vp[10 + dvp] * dp[5]) + (vp[9 + dvp] * dp[6]) + (vp[8 + dvp] * dp[7]) + (vp[7 + dvp] * dp[8]) + (vp[6 + dvp] * dp[9]) + (vp[5 + dvp] * dp[10])
                     + (vp[4 + dvp] * dp[11]) + (vp[3 + dvp] * dp[12]) + (vp[2 + dvp] * dp[13]) + (vp[1 + dvp] * dp[14]) + (vp[0 + dvp] * dp[15])) * scaleFactor);
@@ -667,6 +667,7 @@ final class SynthesisFilter {
         case 15:
             computePcmSamples15();
             break;
+        default:
         }
     }
 

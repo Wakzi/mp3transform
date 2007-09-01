@@ -1,4 +1,4 @@
-package mp3.awt;
+package org.mp3transform.awt;
 
 import java.awt.Button;
 import java.awt.Color;
@@ -32,7 +32,7 @@ public class Player implements ActionListener, MouseListener {
 
     private Font font;
     private Image icon;
-    private String TITLE = "MP3 Player";
+    private static final String TITLE = "MP3 Player";
     private File dir;
     private File[] files;
     private List list;
@@ -54,11 +54,11 @@ public class Player implements ActionListener, MouseListener {
     }
 
     private void run(String[] args) {
-        if(!GraphicsEnvironment.isHeadless()) {
+        if (!GraphicsEnvironment.isHeadless()) {
             font = new Font("Dialog", Font.PLAIN, 11);
             try {
                 InputStream in = getClass().getResourceAsStream("mp3.png");
-                if(in != null) {
+                if (in != null) {
                     byte[] imageData = readBytesAndClose(in, -1);
                     icon = Toolkit.getDefaultToolkit().createImage(imageData);
                 }
@@ -80,7 +80,7 @@ public class Player implements ActionListener, MouseListener {
                 getMethod("isSupported", new Class[0]).
                 invoke(null, new Object[0]);
             
-            if(!supported.booleanValue()) {
+            if (!supported.booleanValue()) {
                 return false;
             }
             
@@ -130,7 +130,7 @@ public class Player implements ActionListener, MouseListener {
                 invoke(tray, new Object[] { trayIcon });
              
              return true;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return false;
         }
     }
@@ -140,7 +140,7 @@ public class Player implements ActionListener, MouseListener {
         if ("exit".equals(command)) {
             System.exit(0);
         } else if ("back".equals(command)) {
-            if(dir == null) {
+            if (dir == null) {
                 readFiles(null);
             } else {
                 readFiles(dir.getParentFile());
@@ -148,15 +148,15 @@ public class Player implements ActionListener, MouseListener {
         } else if ("skip".equals(command)) {
         } else if ("play".equals(command)) {
             File f = getSelectedFile();
-            if(f != null) {
+            if (f != null) {
                 play(f);
             }
         } else if ("stop".equals(command)) {
-            if(thread != null) {
+            if (thread != null) {
                 thread.stopPlaying();
             }
         } else if ("next".equals(command)) {
-            if(thread != null) {
+            if (thread != null) {
                 thread.playNext();
             }
         } else if ("open".equals(command)) {
@@ -166,24 +166,24 @@ public class Player implements ActionListener, MouseListener {
     
     File getSelectedFile() {
         int index = list.getSelectedIndex();
-        if(index < 0 || index >= files.length) {
+        if (index < 0 || index >= files.length) {
             return null;
         }
         return files[index];
     }
-    
+
     private void createFrame() {
         frame = new Frame(TITLE);
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent we) {
-                if(useSystemTray) {
+                if (useSystemTray) {
                     frame.setVisible(false);
                 } else {
                     System.exit(0);
                 }
             }
         });
-        if(icon != null) {
+        if (icon != null) {
             frame.setIconImage(icon);
         }
         frame.setResizable(false);
@@ -211,16 +211,16 @@ public class Player implements ActionListener, MouseListener {
         list.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 File f = getSelectedFile();
-                if(f != null) {
-                    if(f.isDirectory()) {
+                if (f != null) {
+                    if (f.isDirectory()) {
                         readFiles(f);
-                    } else if(isMp3(f)) {
+                    } else if (isMp3(f)) {
                         play(f);
                     }
                 }
             }
         });
-        
+
         Button back = new Button("Up");
         back.setFocusable(false);
         back.setActionCommand("back");
@@ -295,29 +295,29 @@ public class Player implements ActionListener, MouseListener {
     private void readFiles(File dir) {
         File[] f;
         boolean roots = dir == null;
-        if(roots) {
+        if (roots) {
             f = File.listRoots();
         } else {
             f = dir.listFiles();
         }
-        if(f.length == 0) {
+        if (f.length == 0) {
             return;
         }
         // must at least contain one directory or one mp3 file
         ArrayList fileList = new ArrayList();
-        for(int i=0; i<f.length; i++) {
+        for (int i = 0; i < f.length; i++) {
             File f2 = f[i];
-            if(roots || isMp3(f2) || f2.isDirectory()) {
+            if (roots || isMp3(f2) || f2.isDirectory()) {
                 fileList.add(f2);
             }
         }
-        if(fileList.size() == 0) {
+        if (fileList.size() == 0) {
             return;
         }
         this.files = new File[fileList.size()];
         fileList.toArray(files);
         this.dir = dir;
-        if(roots) {
+        if (roots) {
             prefs.remove("dir");
         } else {
             prefs.put("dir", dir.getAbsolutePath());
@@ -326,11 +326,11 @@ public class Player implements ActionListener, MouseListener {
         list.setForeground(list.getBackground());
         list.setFocusable(false);
         list.removeAll();
-        for(int i=0; i<files.length; i++) {
+        for (int i = 0; i < files.length; i++) {
             File f2 = files[i];
-            if(roots || isMp3(f2) || f2.isDirectory()) {
+            if (roots || isMp3(f2) || f2.isDirectory()) {
                 String name = f2.getName().trim();
-                if(name.length() == 0) {
+                if (name.length() == 0) {
                     name = f2.getAbsolutePath();
                 }
                 list.add(name);
@@ -343,32 +343,32 @@ public class Player implements ActionListener, MouseListener {
     
     private void readDirectory() {
         String s = prefs.get("dir", null);
-        if(s != null) {
+        if (s != null) {
             File f = new File(s);
-            if(f.exists()) {
+            if (f.exists()) {
                 dir = f;
             }
         }
     }
 
     private void play(File f) {
-        if(isMp3(f)) {
-            if(thread != null) {
+        if (isMp3(f)) {
+            if (thread != null) {
                 thread.stopPlaying();
                 thread = null;
             }
             thread = PlayerThread.startPlaying(this, f, null);
-        } else if(f.isDirectory()) {
+        } else if (f.isDirectory()) {
             ArrayList files = new ArrayList();
             addAll(files, f);
-            if(files.size() > 0) {
-                for (int i = 0; i < files.size() ; i++) {
+            if (files.size() > 0) {
+                for (int i = 0; i < files.size(); i++) {
                     Object temp = files.get(i);
                     int x = (int) (Math.random() * files.size());
                     files.set(i, files.get(x));
                     files.set(x, temp);
                 }
-                if(thread != null) {
+                if (thread != null) {
                     thread.stopPlaying();
                     thread = null;
                 }
@@ -376,25 +376,24 @@ public class Player implements ActionListener, MouseListener {
             }
         }
     }
-    
+
     private void addAll(ArrayList arrayList, File file) {
         if (file.isDirectory()) {
             File[] list = file.listFiles();
             for (int i = 0; i < list.length; i++) {
                 addAll(arrayList, list[i]);
             }
-        } else if(isMp3(file)) {
+        } else if (isMp3(file)) {
             arrayList.add(file);
         }
     }
-    
-    
+
     private boolean isMp3(File f) {
         return f.getName().toLowerCase().endsWith(".mp3");
     }
 
     public void mouseClicked(MouseEvent e) {
-        if(e.getButton() == MouseEvent.BUTTON1) {
+        if (e.getButton() == MouseEvent.BUTTON1) {
             open();
         }
     }
@@ -413,16 +412,16 @@ public class Player implements ActionListener, MouseListener {
     
     private static byte[] readBytesAndClose(InputStream in, int length) throws IOException {
         try {
-            if(length <= 0) {
+            if (length <= 0) {
                 length = Integer.MAX_VALUE;
             }
             int block = Math.min(4 * 1024, length);
-            ByteArrayOutputStream out=new ByteArrayOutputStream(block);
-            byte[] buff=new byte[block];
-            while(length > 0) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream(block);
+            byte[] buff = new byte[block];
+            while (length > 0) {
                 int len = Math.min(block, length);
                 len = in.read(buff, 0, len);
-                if(len < 0) {
+                if (len < 0) {
                     break;
                 }
                 out.write(buff, 0, len);

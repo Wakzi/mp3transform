@@ -1,12 +1,11 @@
 /*
- * 11/19/04  1.0 moved to LGPL.
+ * 11/19/04 1.0 moved to LGPL.
  * 
- * 11/17/04	 Uncomplete frames discarded. E.B, javalayer@javazoom.net 
+ * 11/17/04 Uncomplete frames discarded. E.B, javalayer@javazoom.net 
  *
- * 12/05/03	 ID3v2 tag returned. E.B, javalayer@javazoom.net 
+ * 12/05/03 ID3v2 tag returned. E.B, javalayer@javazoom.net 
  *
- * 12/12/99	 Based on Ibitstream. Exceptions thrown on errors,
- *			 Temporary removed seek functionality. mdm@techie.com
+ * 12/12/99 Based on Ibitstream. Exceptions thrown on errors, Temporary removed seek functionality. mdm@techie.com
  *
  * 02/12/99 : Java Conversion by E.B , javalayer@javazoom.net
  *
@@ -32,7 +31,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *----------------------------------------------------------------------
  */
-package mp3;
+package org.mp3transform;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -75,13 +74,13 @@ public final class Bitstream {
     private int bitIndex;
     private int syncWord;
     private boolean singleChMode;
-    private static final int BITMASK[] = {
+    private static final int[] BITMASK = {
             0, // dummy
             0x00000001, 0x00000003, 0x00000007, 0x0000000F, 0x0000001F, 0x0000003F, 0x0000007F, 0x000000FF, 0x000001FF, 0x000003FF, 0x000007FF, 0x00000FFF, 0x00001FFF, 0x00003FFF,
             0x00007FFF, 0x0000FFFF, 0x0001FFFF };
     private final PushbackInputStream source;
     private final Header header = new Header();
-    private final byte syncBuffer[] = new byte[4];
+    private final byte[] syncBuffer = new byte[4];
     private byte[] rawID3v2 = null;
     private boolean firstFrame = true;
 
@@ -147,7 +146,7 @@ public final class Bitstream {
     public Header readFrame() throws IOException {
         try {
             Header result = readNextFrame();
-            if (firstFrame == true) {
+            if (firstFrame) {
                 result.parseVBR(frameBytes);
                 firstFrame = false;
             }
@@ -219,8 +218,9 @@ public final class Bitstream {
         headerString = ((syncBuffer[0] << 16) & 0x00FF0000) | ((syncBuffer[1] << 8) & 0x0000FF00) | ((syncBuffer[2] << 0) & 0x000000FF);
         do {
             headerString <<= 8;
-            if (readBytes(syncBuffer, 3, 1) != 1)
+            if (readBytes(syncBuffer, 3, 1) != 1) {
                 throw new EOFException();
+            }
             headerString |= (syncBuffer[3] & 0x000000FF);
             sync = isSyncMark(headerString, syncMode, syncWord);
         } while (!sync);
@@ -235,14 +235,17 @@ public final class Bitstream {
             sync = ((headerString & 0xFFF80C00) == word) && (((headerString & 0x000000C0) == 0x000000C0) == singleChMode);
         }
         // filter out invalid sample rate
-        if (sync)
+        if (sync) {
             sync = (((headerString >>> 10) & 3) != 3);
+        }
         // filter out invalid layer
-        if (sync)
+        if (sync) {
             sync = (((headerString >>> 17) & 3) != 0);
+        }
         // filter out invalid version
-        if (sync)
+        if (sync) {
             sync = (((headerString >>> 19) & 3) != 1);
+        }
         return sync;
     }
 
@@ -272,12 +275,15 @@ public final class Bitstream {
             byte b2 = 0;
             byte b3 = 0;
             b0 = byteRead[k];
-            if (k + 1 < byteSize)
+            if (k + 1 < byteSize) {
                 b1 = byteRead[k + 1];
-            if (k + 2 < byteSize)
+            }
+            if (k + 2 < byteSize) {
                 b2 = byteRead[k + 2];
-            if (k + 3 < byteSize)
+            }
+            if (k + 3 < byteSize) {
                 b3 = byteRead[k + 3];
+            }
             frameBuffer[b++] = ((b0 << 24) & 0xFF000000) | ((b1 << 16) & 0x00FF0000) | ((b2 << 8) & 0x0000FF00) | (b3 & 0x000000FF);
         }
         wordPointer = 0;
@@ -299,7 +305,8 @@ public final class Bitstream {
         if (sum <= 32) {
             // all bits contained in *wordpointer
             returnValue = (frameBuffer[wordPointer] >>> (32 - sum)) & BITMASK[numberOfBits];
-            if ((bitIndex += numberOfBits) == 32) {
+            bitIndex += numberOfBits;
+            if (bitIndex == 32) {
                 bitIndex = 0;
                 wordPointer++;
             }

@@ -22,7 +22,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *----------------------------------------------------------------------
  */
-package mp3.wav;
+package org.mp3transform.wav;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;

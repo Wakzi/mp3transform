@@ -1,4 +1,4 @@
-package mp3;
+package org.mp3transform;
 
 public class BitReservoir2 extends BitReservoir {
     
@@ -13,7 +13,7 @@ public class BitReservoir2 extends BitReservoir {
 
     int getBits(int n) {
         int x = 0;
-        for(int i = 0; i<n; i++) {
+        for (int i = 0; i < n; i++) {
             x = (x << 1) | (getOneBit() == 0 ? 0 : 1);
         }
         return x;
