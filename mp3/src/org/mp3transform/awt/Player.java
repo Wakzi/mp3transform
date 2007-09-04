@@ -25,6 +25,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
 
@@ -40,6 +43,9 @@ public class Player implements ActionListener, MouseListener {
     private boolean useSystemTray;
     private Frame frame;
     private Preferences prefs = Preferences.userNodeForPackage(getClass());
+    private static final String PREF_DIR = "dir", PREF_LISTENER_PORT = "listenerPort";
+    private static final int FIRST_PORT = 11100;
+    private ServerSocket serverSocket;
     private Label playing;
 
     /**
@@ -54,6 +60,19 @@ public class Player implements ActionListener, MouseListener {
     }
 
     private void run(String[] args) {
+        try {
+            int port = prefs.getInt(PREF_LISTENER_PORT, 0);
+            if (port != 0) {
+                Socket socket = new Socket(InetAddress.getLocalHost(), port);
+                socket.close();
+                // could connect, that means the application already runs
+                System.out.println("Already running, listening on port " + port);
+                return;
+            }
+        } catch (Exception e) {
+            // ignore - in this case the application does not run
+        }
+        startListener();
         if (!GraphicsEnvironment.isHeadless()) {
             font = new Font("Dialog", Font.PLAIN, 11);
             try {
@@ -71,6 +90,39 @@ public class Player implements ActionListener, MouseListener {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void startListener() {
+        int port = 0;
+        for (int i = 0; i < 100; i++) {
+            try {
+                int p = FIRST_PORT + i;
+                serverSocket = new ServerSocket(p);
+                port = p;
+                break;
+            } catch (IOException e) {
+                // ignore
+            }
+        }
+        if (port == 0) {
+            // did not work, probably TCP/IP is broken
+            return;
+        }
+        prefs.putInt(PREF_LISTENER_PORT, port);
+        Runnable runnable = new Runnable() {
+            public void run() {
+                while (serverSocket != null) {
+                    try {
+                        Socket s = serverSocket.accept();
+                        s.close();
+                        open();
+                    } catch (IOException e) {
+                        // ignore
+                    }
+                }
+            }
+        };
+        new Thread(runnable).start();
     }
 
     private boolean createTrayIcon() {
@@ -135,10 +187,21 @@ public class Player implements ActionListener, MouseListener {
         }
     }
     
+    private void exit() {
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            // ignore
+        }
+        serverSocket = null;
+        prefs.remove(PREF_LISTENER_PORT);
+        System.exit(0);
+    }
+    
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
         if ("exit".equals(command)) {
-            System.exit(0);
+            exit();
         } else if ("back".equals(command)) {
             if (dir == null) {
                 readFiles(null);
@@ -318,9 +381,9 @@ public class Player implements ActionListener, MouseListener {
         fileList.toArray(files);
         this.dir = dir;
         if (roots) {
-            prefs.remove("dir");
+            prefs.remove(PREF_DIR);
         } else {
-            prefs.put("dir", dir.getAbsolutePath());
+            prefs.put(PREF_DIR, dir.getAbsolutePath());
         }
         Color fg = list.getForeground();
         list.setForeground(list.getBackground());
@@ -342,7 +405,7 @@ public class Player implements ActionListener, MouseListener {
     }
     
     private void readDirectory() {
-        String s = prefs.get("dir", null);
+        String s = prefs.get(PREF_DIR, null);
         if (s != null) {
             File f = new File(s);
             if (f.exists()) {
