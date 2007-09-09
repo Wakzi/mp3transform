@@ -33,6 +33,7 @@ public class PlayerThread implements Runnable {
         t.currentFile = file;
         t.fileList = list;
         Thread thread = new Thread(t);
+        thread.setPriority(Thread.MAX_PRIORITY);
         t.thread = thread;
         thread.start();
         return t;

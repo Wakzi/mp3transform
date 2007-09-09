@@ -56,6 +56,7 @@ public class Player implements ActionListener, MouseListener {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
+        // TODO high priority (start /HIGH)
         new Player().run(args);
     }
 
