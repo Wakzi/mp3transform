@@ -36,6 +36,7 @@ public class Player implements ActionListener, MouseListener {
     private Font font;
     private Image icon;
     private static final String TITLE = "MP3 Player";
+    private static final String MP3_SUFFIX = ".mp3";
     private File dir;
     private File[] files;
     private List list;
@@ -397,7 +398,7 @@ public class Player implements ActionListener, MouseListener {
                 if (name.length() == 0) {
                     name = f2.getAbsolutePath();
                 }
-                list.add(name);
+                list.add(getTitle(name));
             }
         }
         list.setForeground(fg);
@@ -415,7 +416,7 @@ public class Player implements ActionListener, MouseListener {
         }
     }
 
-    private void play(File f) {
+    void play(File f) {
         if (isMp3(f)) {
             if (thread != null) {
                 thread.stopPlaying();
@@ -453,7 +454,7 @@ public class Player implements ActionListener, MouseListener {
     }
 
     private boolean isMp3(File f) {
-        return f.getName().toLowerCase().endsWith(".mp3");
+        return f.getName().toLowerCase().endsWith(MP3_SUFFIX);
     }
 
     public void mouseClicked(MouseEvent e) {
@@ -499,7 +500,14 @@ public class Player implements ActionListener, MouseListener {
 
     public void setCurrentFile(File file) {
         String name = file == null ? "" : file.getName();
-        playing.setText(name);
+        playing.setText(getTitle(name));
+    }
+    
+    private String getTitle(String name) {
+        if (name.toLowerCase().endsWith(MP3_SUFFIX)) {
+            name = name.substring(0, name.length() - MP3_SUFFIX.length());
+        }
+        return name;
     }
 
 }
