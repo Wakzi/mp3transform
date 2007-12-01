@@ -16,6 +16,7 @@ import java.awt.Window;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 
@@ -27,6 +28,8 @@ public class CoverCanvas extends Window implements ImageObserver, MouseMotionLis
     private static final int DELAY = 100;
     private Image coverImage;
     private BufferedImage coverBuffer;
+    private Graphics2D coverGraphics; 
+
     private int[] coverArray;
     private BufferedImage outputBuffer;
     private int[] outputArray;
@@ -43,10 +46,9 @@ public class CoverCanvas extends Window implements ImageObserver, MouseMotionLis
     private long lastAction;
     private static final boolean BIG = true;
     private int imageIndex = -1;
-    private int maxWidth, maxHeight;
-    private Player player;
+    private PlayerNoCover player;
     
-    public CoverCanvas(Player player, Frame owner, Cover[] list) {
+    public CoverCanvas(PlayerNoCover player, Frame owner, Cover[] list) {
         super(owner);
         this.player = player;
         this.list = list;
@@ -60,11 +62,29 @@ public class CoverCanvas extends Window implements ImageObserver, MouseMotionLis
             screenWidth = 300;
         }
         int max = Math.min(screenWidth, screenHeight) / 2;
-        maxWidth = max;
-        maxHeight = max;
+        width = max;
+        height = max;
+        shadow = height / 2;
         exit = new Rectangle(screenWidth - 40, screenHeight - 40, 20, 20);
         scrollBar = new Rectangle(50, screenHeight - 40, screenWidth - 100, 20);
+        coverBuffer = new BufferedImage(width, height, BufferedImage.TYPE_INT_BGR);
+        coverGraphics = coverBuffer.createGraphics();
+        coverArray = new int[width * height];
+        outputBuffer = new BufferedImage(width, height + shadow, BufferedImage.TYPE_INT_BGR);
+        outputArray = new int[width * (height + shadow)];
+        emptyArray = new int[width * (height + shadow)];
+        int todo;
+        coverGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         initImage();
+        addMouseListener(this);
+        addMouseMotionListener(this);
+        if (!BIG) {
+            Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+            setLocation((d.width - screenWidth) / 2, (d.height - height) / 2);
+            setSize(screenWidth, screenHeight);
+            setVisible(true);
+            toFront();
+        }
         new Thread(this).start();
     }
     
@@ -79,35 +99,15 @@ public class CoverCanvas extends Window implements ImageObserver, MouseMotionLis
         coverImage = icon.getImage();
         int w = coverImage.getWidth(this);
         int h = coverImage.getHeight(this);
-        double scale = Math.min((double) maxWidth / w, (double) maxHeight / h);
-System.out.println("w:" + w + " h:" + h + " s:" + scale + " mw: " + maxWidth + " mh:" + maxHeight);
+        double scale = Math.min((double) width / w, (double) height / h);
+        System.out.println("w:" + w + " h:" + h + " s:" + scale + " w: " + width + " h:" + height);
         w *= scale;
         h *= scale;
-        width = maxWidth;
-        height = maxHeight;
-System.out.println("  w:" + w + " h:" + h + " s:" + scale);
-        shadow = height / 2;
-        coverBuffer = new BufferedImage(width, height, BufferedImage.TYPE_INT_BGR);
-        coverArray = new int[width * height];
-        Graphics2D g = coverBuffer.createGraphics(); 
-        int todo;
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-        g.scale(scale, scale);
-        g.drawImage(coverImage, (width - w) / 2, (height - h), this);
+        // System.out.println("  w:" + w + " h:" + h + " s:" + scale);
+        coverGraphics.setTransform(new AffineTransform());
+        coverGraphics.scale(scale, scale);
+        coverGraphics.drawImage(coverImage, (width - w) / 2, (height - h), this);
         coverBuffer.getRGB(0, 0, width, height, coverArray, 0, width);
-        outputBuffer = new BufferedImage(width, height + shadow, BufferedImage.TYPE_INT_BGR);
-        outputArray = new int[width * (height + shadow)];
-        emptyArray = new int[width * (height + shadow)];
-        addMouseListener(this);
-        addMouseMotionListener(this);
-        
-        if (!BIG) {
-            Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-            setLocation((d.width - screenWidth) / 2, (d.height - height) / 2);
-            setSize(screenWidth, screenHeight);
-            setVisible(true);
-            toFront();
-        }
     }
 
     public void update(Graphics g) {

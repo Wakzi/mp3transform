@@ -1,4 +1,4 @@
-/*   
+/*
  * This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Library General Public License as published
  *   by the Free Software Foundation; either version 2 of the License, or
@@ -42,7 +42,7 @@ public class Decoder {
 //        Decoder.testBits();
 //        Decoder.testBits();
 //    }
-    
+
 //    public static void testBits() throws Exception {
 //        Random r = new Random();
 //        byte[] data = new byte[2000];
@@ -61,11 +61,11 @@ public class Decoder {
 //            }
 //        }
 //        // old: 7188, 11625
-//        // int: 
+//        // int:
 //        // byte: 6219,4484
 //        System.out.println(System.currentTimeMillis() - time);
 //    }
-    
+
 //    public static void main(String[] a) throws Exception {
 //        Decoder decoder = new Decoder();
 //        BENCHMARK = false;
@@ -88,13 +88,13 @@ public class Decoder {
 //        playAll(new File("C:/music/Missy Higgins/On A Clear Night"));
 //        playAll(new File("C:/music/Vanessa-Mae"));
 //        playAll(new File("C:/music/s"));
-//        playAll(new File("C:/music/s/Shakira/Shakira - Grandes Exitos - Ojos Asì.mp3"));
+//        playAll(new File("C:/music/s/Shakira/Shakira - Grandes Exitos - Ojos Asï¿½.mp3"));
 //        playAll(new File("C:/music/o/Orishas - El Kilo - El Kilo.mp3"));
 //        playAll(new File("C:/music/s/Shakira"));
 //        playAll(new File("C:/music"));
 //        System.out.println("done in " + (System.currentTimeMillis() - time));
 //    }
-    
+
 //    private void playAll(File file) throws Exception {
 //        if (file.isDirectory()) {
 //            File[] list = file.listFiles();
@@ -111,7 +111,7 @@ public class Decoder {
 //            play(new BufferedInputStream(new FileInputStream(file), 4 * 1024));
 //        }
 //    }
-    
+
     public void decodeFrame(Header header, Bitstream stream) throws IOException {
         if (!initialized) {
             double scaleFactor = 32700.0f;
@@ -163,13 +163,13 @@ public class Decoder {
         }
     }
 
-    public void play(InputStream in) throws IOException {
+    public void play(String name, InputStream in) throws IOException {
         stop = false;
         int frameCount = Integer.MAX_VALUE;
-        
-//        int testing;
-//        frameCount = 100;
-        
+
+        // int testing;
+        // frameCount = 100;
+
         Decoder decoder = new Decoder();
         Bitstream stream = new Bitstream(in);
         SourceDataLine line = null;
@@ -204,14 +204,12 @@ public class Decoder {
                 }
                 decoder.decodeFrame(header, stream);
             } catch (Exception e) {
-                if (error++ > 10) {
+                if (error++ > 1000) {
                     break;
                 }
-                e.printStackTrace();
-//                System.out.println("File: " + file + " Frame: " + frame + " Error: " + e.toString());
-//                 e.printStackTrace();
-//                 System.out.println("File: " + file);
-                // break;
+                // TODO should not write directly
+                System.out.println("Error at: " + name + " Frame: " + frame + " Error: " + e.toString());
+                // e.printStackTrace();
             } finally {
                 stream.closeFrame();
             }

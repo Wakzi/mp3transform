@@ -15,7 +15,7 @@ public class PlayerThread implements Runnable {
     private ArrayList fileList;
     private Thread thread;
     private boolean stop;
-    private Player player;
+    private PlayerNoCover player;
 
     public void stopPlaying() {
         stop = true;
@@ -27,7 +27,7 @@ public class PlayerThread implements Runnable {
         }
     }
     
-    public static PlayerThread startPlaying(Player player, File file, ArrayList list) {
+    public static PlayerThread startPlaying(PlayerNoCover player, File file, ArrayList list) {
         PlayerThread t = new PlayerThread();
         t.player = player;
         t.currentFile = file;
@@ -68,7 +68,7 @@ public class PlayerThread implements Runnable {
         System.out.println("playing: " + file);
         FileInputStream in = new FileInputStream(file);
         BufferedInputStream bin = new BufferedInputStream(in, 128 * 1024);
-        decoder.play(bin);
+        decoder.play(file.getName(), bin);
         currentFile = null;
     }
 

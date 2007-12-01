@@ -31,7 +31,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
 
-public class Player implements ActionListener, MouseListener {
+public class Player extends PlayerNoCover implements ActionListener, MouseListener {
 
     private Font font;
     private Image icon;
@@ -48,6 +48,7 @@ public class Player implements ActionListener, MouseListener {
     private static final int FIRST_PORT = 11100;
     private ServerSocket serverSocket;
     private Label playing;
+    private CoverCanvas coverCanvas;
 
     /**
      * The command line interface for this tool.
@@ -57,7 +58,6 @@ public class Player implements ActionListener, MouseListener {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        // TODO high priority (start /HIGH)
         new Player().run(args);
     }
 
@@ -220,6 +220,11 @@ public class Player implements ActionListener, MouseListener {
             if (thread != null) {
                 thread.stopPlaying();
             }
+        } else if ("covers".equals(command)) {
+            Cover[] list = getCoverList();
+            if (list.length > 0) {
+                coverCanvas = new CoverCanvas(this, frame, list);
+            }
         } else if ("next".equals(command)) {
             if (thread != null) {
                 thread.playNext();
@@ -227,6 +232,25 @@ public class Player implements ActionListener, MouseListener {
         } else if ("open".equals(command)) {
             open();
         }
+    }
+    
+    private void addCovers(ArrayList list, File[] files) {
+        for (int i = 0; i < files.length; i++) {
+            File f = files[i];
+            if (isCoverImageFile(f)) {
+                list.add(new Cover(f));
+            } else if (f.isDirectory()) {
+                addCovers(list, f.listFiles());
+            }
+        }
+    }
+    
+    Cover[] getCoverList() {
+        ArrayList list = new ArrayList();
+        addCovers(list, files);
+        Cover[] array = new Cover[list.size()];
+        list.toArray(array);
+        return array;
     }
     
     File getSelectedFile() {
@@ -267,7 +291,7 @@ public class Player implements ActionListener, MouseListener {
         list = new List(7, false) {
             private static final long serialVersionUID = 1L;
             public Dimension getMinimumSize() {
-                return new Dimension(200, 200);
+                return new Dimension(250, 200);
             }
             public Dimension getPreferredSize() {
                 return getMinimumSize();
@@ -313,6 +337,15 @@ public class Player implements ActionListener, MouseListener {
         c.gridwidth = GridBagConstraints.EAST;
         frame.add(next, c);
 
+        Button covers = new Button("Covers");
+        covers.setFocusable(false);
+        covers.setActionCommand("covers");
+        covers.addActionListener(this);
+        covers.setFont(font);
+        c.anchor = GridBagConstraints.EAST;
+        c.gridwidth = GridBagConstraints.EAST;
+        frame.add(covers, c);
+
         Button stop = new Button("Stop");
         stop.setFocusable(false);
         stop.setActionCommand("stop");
@@ -333,7 +366,7 @@ public class Player implements ActionListener, MouseListener {
             private static final long serialVersionUID = 1L;
             public Dimension getMinimumSize() {
                 Dimension d = super.getMinimumSize();
-                d.width = 200;
+                d.width = 250;
                 return d;
             }
             public Dimension getPreferredSize() {
@@ -344,7 +377,7 @@ public class Player implements ActionListener, MouseListener {
         playing.setFont(font);
         frame.add(playing, c);
 
-        int width = 250, height = 320;
+        int width = 300, height = 320;
         frame.setSize(width, height);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         frame.setLocation((screenSize.width - width) / 2, (screenSize.height - height) / 2);
@@ -457,6 +490,11 @@ public class Player implements ActionListener, MouseListener {
         return f.getName().toLowerCase().endsWith(MP3_SUFFIX);
     }
 
+    private boolean isCoverImageFile(File f) {
+        int todoSupportPngBmpJpegGif;
+        return f.getName().toLowerCase().endsWith(".jpg");
+    }
+    
     public void mouseClicked(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
             open();
