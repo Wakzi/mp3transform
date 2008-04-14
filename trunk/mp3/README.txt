@@ -29,4 +29,9 @@ FAQ :
 
 - How to skip frames to have a seek feature?
   This is currently not implemented.
+  
+- How to build it?
+  build.bat (Windows)
+  build.sh (Linux)
+
 
