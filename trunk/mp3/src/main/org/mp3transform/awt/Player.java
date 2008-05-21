@@ -31,6 +31,12 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
 
+import org.mp3transform.alarm.AlarmTask;
+import org.mp3transform.alarm.Scheduler;
+import org.mp3transform.alarm.ShellTask;
+import org.mp3transform.alarm.Task;
+import org.mp3transform.alarm.Scheduler.Job;
+
 public class Player extends PlayerNoCover implements ActionListener, MouseListener {
 
     private Font font;
@@ -60,8 +66,40 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
     public static void main(String[] args) throws Exception {
         new Player().run(args);
     }
+    
+    private void schedule() {
+        try {
+            if (!prefs.nodeExists("tasks")) {
+                return;
+            }
+            Scheduler scheduler = Scheduler.getInstance();
+            Preferences tasks = prefs.node("tasks");
+            String[] children = tasks.childrenNames();
+            for (int i = 0; i < children.length; i++) {
+                String name = children[i];
+                Preferences task = tasks.node(name);
+                String when = task.get("when", "* * * * *");
+                task.put("when", when);
+                String type = task.get("type", "alarm");
+                Task t;
+                if ("alarm".equals(type)) {
+                    t = new AlarmTask(task.get("message", ""));
+                } else if ("shell".equals(type)) {
+                    t = new ShellTask(task.get("command", ""));
+                } else {
+                    t = new AlarmTask(task.get("message", ""));
+                }
+                Job job = scheduler.createJob(when, t);
+                scheduler.schedule(job);
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+            // ignore
+        }
+    }
 
     private void run(String[] args) {
+        schedule();
         try {
             int port = prefs.getInt(PREF_LISTENER_PORT, 0);
             if (port != 0) {
