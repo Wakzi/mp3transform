@@ -19,18 +19,18 @@ public class Build extends BuildBase {
     }
     
     public void clean() {
-        delete("target");
-        mkdir("target");
+        delete("temp");
+        mkdir("temp");
     }
     
     public void compile() {
         clean();
-        javac(new String[] {"-d", "target", "-sourcepath", "src/main" }, getFiles("src"));
+        javac(new String[] {"-d", "temp", "-sourcepath", "src/main" }, getFiles("src"));
         
         List files = getFiles("src/main");
         files = filterFiles(files, false, "*.java");
         files = filterFiles(files, false, "*.launch");
-        copy("target", files, "src/main");
+        copy("temp", files, "src/main");
         
         manifest("org.mp3transform.awt.Player");
     }
@@ -43,14 +43,14 @@ public class Build extends BuildBase {
         manifest = replaceAll(manifest, "${createdBy}", createdBy);
         String mainClassTag = manifest == null ? "" : "Main-Class: " + mainClassName;
         manifest = replaceAll(manifest, "${mainClassTag}", mainClassTag);
-        writeFile(new File("target/META-INF/MANIFEST.MF"), manifest.getBytes());
+        writeFile(new File("temp/META-INF/MANIFEST.MF"), manifest.getBytes());
     }
     
     public void jar() {
-        List files = getFiles("target");
-        files = filterFiles(files, false, "target/org/mp3transform/build/*");
-        jar("bin/mp3transform.jar", "target", files);
-        delete("target");
+        List files = getFiles("temp");
+        files = filterFiles(files, false, "temp/org/mp3transform/build/*");
+        jar("bin/mp3transform.jar", "temp", files);
+        delete("temp");
     }
 
 }

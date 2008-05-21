@@ -8,4 +8,4 @@ if [ ! -f "bin/org/mp3transform/build/Build.class" ] ; then
   fi
   javac -sourcepath src/tools -d bin src/tools/org/mp3transform/build/*.java
 fi
-java -cp "bin:$JAVA_HOME/lib/tools.jar:target" org.mp3transform.build.Build $@
+java -cp "bin:$JAVA_HOME/lib/tools.jar:temp" org.mp3transform.build.Build $@
