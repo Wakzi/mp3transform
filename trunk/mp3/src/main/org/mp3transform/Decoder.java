@@ -151,9 +151,6 @@ public class Decoder {
         bufferPointer[channel] = p;
     }
 
-    public void close() throws IOException {
-    }
-
     protected void writeBuffer() throws IOException {
         if (line != null) {
             line.write(buffer, 0, bufferPointer[0]);
@@ -213,7 +210,6 @@ public class Decoder {
             } finally {
                 stream.closeFrame();
             }
-            decoder.close();
         }
         if (error > 0) {
             System.out.println("errors: " + error);

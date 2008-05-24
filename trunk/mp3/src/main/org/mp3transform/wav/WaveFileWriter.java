@@ -29,19 +29,19 @@ import java.io.RandomAccessFile;
 
 public class WaveFileWriter {
     static class WaveFormatChunkData {
-        private short formatTag = 0; // Format category (PCM=1)
-        private short channels = 0; // Number of channels (mono=1, stereo=2)
-        private int samplesPerSec = 0; // Sampling rate [Hz]
-        private int avgBytesPerSec = 0;
-        private short blockAlign = 0;
-        private short bitsPerSample = 0;
+        short formatTag = 0; // Format category (PCM=1)
+        short channels = 0; // Number of channels (mono=1, stereo=2)
+        int samplesPerSec = 0; // Sampling rate [Hz]
+        int avgBytesPerSec = 0;
+        short blockAlign = 0;
+        short bitsPerSample = 0;
 
-        private WaveFormatChunkData() {
+        WaveFormatChunkData() {
             formatTag = 1; // PCM
             config(44100, (short) 16, (short) 1);
         }
 
-        private void config(int samplingRate, short bitsPerSample,
+        void config(int samplingRate, short bitsPerSample,
                 short channels) {
             samplesPerSec = samplingRate;
             this.channels = channels;
@@ -52,10 +52,10 @@ public class WaveFileWriter {
     }
 
     static class WaveFormatChunk {
-        private RiffChunkHeader header;
-        private WaveFormatChunkData data;
+        RiffChunkHeader header;
+        WaveFormatChunkData data;
 
-        private WaveFormatChunk() {
+        WaveFormatChunk() {
             header = new RiffChunkHeader();
             data = new WaveFormatChunkData();
             header.ckID = fourCC("fmt ");

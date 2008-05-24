@@ -24,7 +24,7 @@ public class AlarmTask implements Task, Runnable {
         new AlarmTask("Hello World").execute();
     }
     
-    private void close() {
+    void close() {
         stop = true;
         frame.dispose();
     }

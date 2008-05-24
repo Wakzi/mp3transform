@@ -39,6 +39,10 @@ import org.mp3transform.alarm.Scheduler.Job;
 
 public class Player extends PlayerNoCover implements ActionListener, MouseListener {
 
+    boolean useSystemTray;
+    ServerSocket serverSocket;
+    Frame frame;
+
     private Font font;
     private Image icon;
     private static final String TITLE = "MP3 Player";
@@ -47,12 +51,9 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
     private File[] files;
     private List list;
     private PlayerThread thread;
-    private boolean useSystemTray;
-    private Frame frame;
     private Preferences prefs = Preferences.userNodeForPackage(getClass());
     private static final String PREF_DIR = "dir", PREF_LISTENER_PORT = "listenerPort";
     private static final int FIRST_PORT = 11100;
-    private ServerSocket serverSocket;
     private Label playing;
     private CoverCanvas coverCanvas;
 
@@ -64,7 +65,7 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        new Player().run(args);
+        new Player().run();
     }
     
     private void schedule() {
@@ -98,7 +99,7 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
         }
     }
 
-    private void run(String[] args) {
+    private void run() {
         schedule();
         try {
             int port = prefs.getInt(PREF_LISTENER_PORT, 0);
@@ -248,7 +249,6 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
             } else {
                 readFiles(dir.getParentFile());
             }
-        } else if ("skip".equals(command)) {
         } else if ("play".equals(command)) {
             File f = getSelectedFile();
             if (f != null) {
@@ -424,11 +424,11 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
         
     }
     
-    private void open() {
+    void open() {
         frame.setVisible(true);
     }
 
-    private void readFiles(File dir) {
+    void readFiles(File dir) {
         File[] f;
         boolean roots = dir == null;
         if (roots) {
@@ -524,7 +524,7 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
         }
     }
 
-    private boolean isMp3(File f) {
+    boolean isMp3(File f) {
         return f.getName().toLowerCase().endsWith(MP3_SUFFIX);
     }
 
@@ -540,15 +540,19 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
     }
 
     public void mouseEntered(MouseEvent e) {
+        // do nothing
     }
 
     public void mouseExited(MouseEvent e) {
+        // do nothing
     }
 
     public void mousePressed(MouseEvent e) {
+        // do nothing
     }
 
     public void mouseReleased(MouseEvent e) {
+        // do nothing
     }
     
     private static byte[] readBytesAndClose(InputStream in, int length) throws IOException {
