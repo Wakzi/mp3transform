@@ -1,5 +1,6 @@
 package org.mp3transform.awt;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Graphics;
@@ -10,7 +11,6 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.SystemColor;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.MouseEvent;
@@ -120,16 +120,16 @@ public class CoverCanvas extends Window implements ImageObserver, MouseMotionLis
         outputBuffer.setRGB(0, 0, width, height + shadow, outputArray, 0, width);
         Graphics2D g2 = (Graphics2D) g;
         if (!init) {
-            g2.setColor(SystemColor.black);
+            g2.setColor(Color.black);
             g2.fillRect(0, 0, screenWidth, screenHeight);
-            g2.setColor(SystemColor.darkGray);
+            g2.setColor(Color.darkGray);
             g2.fillRect(exit.x, exit.y, exit.width, exit.height);
             g2.drawRect(scrollBar.x, scrollBar.y, scrollBar.width, scrollBar.height);
             init = true;
         }
-        g2.setColor(SystemColor.black);
+        g2.setColor(Color.black);
         g2.fillRect(scrollBar.x + 1, scrollBar.y + 1, scrollBar.width - 1, scrollBar.height - 1);
-        g2.setColor(SystemColor.darkGray);
+        g2.setColor(Color.darkGray);
         double w = scrollBar.width / list.length;
         g2.fillRect(scrollBar.x + (int) (listIndex * w), scrollBar.y, (int) w, scrollBar.height);
         
@@ -231,6 +231,7 @@ public class CoverCanvas extends Window implements ImageObserver, MouseMotionLis
     }
 
     public void mouseMoved(MouseEvent e) {
+        // nothing to do
     }
 
     public void mouseClicked(MouseEvent e) {
@@ -242,9 +243,11 @@ public class CoverCanvas extends Window implements ImageObserver, MouseMotionLis
     }
 
     public void mouseEntered(MouseEvent e) {
+        // nothing to do
     }
 
     public void mouseExited(MouseEvent e) {
+        // nothing to do
     }
 
     public void mousePressed(MouseEvent e) {
@@ -280,6 +283,7 @@ public class CoverCanvas extends Window implements ImageObserver, MouseMotionLis
                     repaint();
                 }
             } catch (InterruptedException e) {
+                // ignore
             }
         }
     }

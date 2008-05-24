@@ -49,9 +49,8 @@ public class PlayerThread implements Runnable {
                 }
                 if (currentFile == null) {
                     break;
-                } else {
-                    play(currentFile);
                 }
+                play(currentFile);
             }
             player.setCurrentFile(null);
         } catch (IOException e) {

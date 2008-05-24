@@ -88,7 +88,7 @@ public class Scheduler extends Thread {
             return set != null && !set.get(value);
         }
 
-        private void run() {
+        void run() {
             task.execute();
         }
 

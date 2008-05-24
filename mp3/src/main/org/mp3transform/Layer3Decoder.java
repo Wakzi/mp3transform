@@ -45,36 +45,36 @@ import org.mp3transform.Constants.SBI;
  * granules (sub-frames)
  */
 final class Layer3Decoder {
-    private static class GrInfo {
-        private int part23Length;
-        private int bigValues;
-        private int globalGain;
-        private int scaleFactorCompress;
-        private boolean windowSwitching;
-        private int blockType;
-        private boolean mixedBlock;
-        private int[] tableSelect = new int[3];
-        private int[] subblockGain = new int[3];
-        private int region0Count;
-        private int region1Count;
-        private int preflag;
-        private int scaleFactorScale;
-        private int count1TableSelect;
+    static class GrInfo {
+        int part23Length;
+        int bigValues;
+        int globalGain;
+        int scaleFactorCompress;
+        boolean windowSwitching;
+        int blockType;
+        boolean mixedBlock;
+        int[] tableSelect = new int[3];
+        int[] subblockGain = new int[3];
+        int region0Count;
+        int region1Count;
+        int preflag;
+        int scaleFactorScale;
+        int count1TableSelect;
     }
 
-    private static class Channel {
-        private int[] scfsi = new int[4];
-        private GrInfo[] gr = new GrInfo[] { new GrInfo(), new GrInfo() };
+    static class Channel {
+        int[] scfsi = new int[4];
+        GrInfo[] gr = new GrInfo[] { new GrInfo(), new GrInfo() };
     }
 
-    private static class SideInfo {
-        private int mainDataBegin = 0;
-        private Channel[] ch = new Channel[] { new Channel(), new Channel() };
+    static class SideInfo {
+        int mainDataBegin = 0;
+        Channel[] ch = new Channel[] { new Channel(), new Channel() };
     }
 
-    private static class ScaleFactor {
-        private int[] l = new int[23]; /* [cb] */
-        private int[][] s = new int[3][13]; /* [window][cb] */
+    static class ScaleFactor {
+        int[] l = new int[23]; /* [cb] */
+        int[][] s = new int[3][13]; /* [window][cb] */
     }
 
     private static final int SSLIMIT = 18;
@@ -639,16 +639,13 @@ final class Layer3Decoder {
             if (abv > 0) {
                 if (abv < Constants.T43_SIZE) {
                     return globalGain * Constants.T43[abv];
-                } else {
-                    return globalGain * Math.pow(abv, D43);
                 }
-            } else {
-                if (-abv < Constants.T43_SIZE) {
-                    return -globalGain * Constants.T43[-abv];
-                } else {
-                    return -globalGain * Math.pow(-abv, D43);
-                }
+                return globalGain * Math.pow(abv, D43);
             }
+            if (-abv < Constants.T43_SIZE) {
+                return -globalGain * Constants.T43[-abv];
+            }
+            return -globalGain * Math.pow(-abv, D43);
         }
     }
 
