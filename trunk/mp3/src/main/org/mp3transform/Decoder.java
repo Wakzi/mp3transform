@@ -24,19 +24,21 @@ import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
 
 public class Decoder {
+    public static final int BUFFER_SIZE = 2 * 1152;
+    public static final int MAX_CHANNELS = 2;
     private static final boolean BENCHMARK = false;
+    
+    protected final int[] bufferPointer = new int[MAX_CHANNELS];
+    protected int channels;
     private SynthesisFilter filter1;
     private SynthesisFilter filter2;
     private Layer3Decoder l3decoder;
     private boolean initialized;
 
-    public static final int BUFFER_SIZE = 2 * 1152;
-    public static final int MAX_CHANNELS = 2;
     private SourceDataLine line;
     private final byte[] buffer = new byte[BUFFER_SIZE * 2];
-    protected final int[] bufferPointer = new int[MAX_CHANNELS];
-    protected int channels;
     private boolean stop;
+    private volatile boolean pause;
 
 //    public static void mainBits(String[] args) throws Exception {
 //        Decoder.testBits();
@@ -172,6 +174,17 @@ public class Decoder {
         SourceDataLine line = null;
         int error = 0;
         for (int frame = 0; !stop && frame < frameCount; frame++) {
+            if (pause) {
+                line.stop();
+                while (pause && !stop) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        // ignore
+                    }
+                }
+                line.start();
+            }
             try {
                 Header header = stream.readFrame();
                 if (header == null) {
@@ -217,7 +230,6 @@ public class Decoder {
         in.close();
         if (line != null) {
             line.stop();
-            line.drain();
             line.close();
             line = null;
         }
@@ -225,6 +237,11 @@ public class Decoder {
 
     public void stop() {
         this.stop = true;
+    }
+    
+    public boolean pause() {
+        this.pause = !pause;
+        return pause;
     }
 
 }

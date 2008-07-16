@@ -33,10 +33,16 @@ import java.util.prefs.Preferences;
 
 public class PlayerNoCover implements ActionListener, MouseListener {
 
-    private Font font;
-    private Image icon;
+    private static final String PREF_DIR = "dir", PREF_LISTENER_PORT = "listenerPort";
+    private static final int FIRST_PORT = 11100;
     private static final String TITLE = "MP3 Player";
     private static final String MP3_SUFFIX = ".mp3";
+    
+    protected Label playingLabel;
+    protected String playingText = "";
+    
+    private Font font;
+    private Image icon;
     private File dir;
     private File[] files;
     private List list;
@@ -44,10 +50,7 @@ public class PlayerNoCover implements ActionListener, MouseListener {
     private boolean useSystemTray;
     private Frame frame;
     private Preferences prefs = Preferences.userNodeForPackage(getClass());
-    private static final String PREF_DIR = "dir", PREF_LISTENER_PORT = "listenerPort";
-    private static final int FIRST_PORT = 11100;
     private ServerSocket serverSocket;
-    private Label playing;
 
     /**
      * The command line interface for this tool.
@@ -329,7 +332,7 @@ public class PlayerNoCover implements ActionListener, MouseListener {
 
         c.anchor = GridBagConstraints.WEST;
         c.gridwidth = GridBagConstraints.REMAINDER;
-        playing = new Label() {
+        playingLabel = new Label() {
             private static final long serialVersionUID = 1L;
             public Dimension getMinimumSize() {
                 Dimension d = super.getMinimumSize();
@@ -340,9 +343,9 @@ public class PlayerNoCover implements ActionListener, MouseListener {
                 return getMinimumSize();
             }
         };
-        playing.setAlignment(Label.LEFT);
-        playing.setFont(font);
-        frame.add(playing, c);
+        playingLabel.setAlignment(Label.LEFT);
+        playingLabel.setFont(font);
+        frame.add(playingLabel, c);
 
         int width = 250, height = 320;
         frame.setSize(width, height);
@@ -500,7 +503,8 @@ public class PlayerNoCover implements ActionListener, MouseListener {
 
     public void setCurrentFile(File file) {
         String name = file == null ? "" : file.getName();
-        playing.setText(getTitle(name));
+        playingText = getTitle(name);
+        playingLabel.setText(playingText);
     }
     
     private String getTitle(String name) {
