@@ -39,22 +39,22 @@ import org.mp3transform.alarm.Scheduler.Job;
 
 public class Player extends PlayerNoCover implements ActionListener, MouseListener {
 
+    private static final String TITLE = "MP3 Player";
+    private static final String MP3_SUFFIX = ".mp3";
+    private static final String PREF_DIR = "dir", PREF_LISTENER_PORT = "listenerPort";
+    private static final int FIRST_PORT = 11100;
+
     boolean useSystemTray;
     ServerSocket serverSocket;
     Frame frame;
 
     private Font font;
     private Image icon;
-    private static final String TITLE = "MP3 Player";
-    private static final String MP3_SUFFIX = ".mp3";
     private File dir;
     private File[] files;
     private List list;
     private PlayerThread thread;
     private Preferences prefs = Preferences.userNodeForPackage(getClass());
-    private static final String PREF_DIR = "dir", PREF_LISTENER_PORT = "listenerPort";
-    private static final int FIRST_PORT = 11100;
-    private Label playing;
     private CoverCanvas coverCanvas;
 
     /**
@@ -163,7 +163,9 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
                 }
             }
         };
-        new Thread(runnable).start();
+        Thread thread = new Thread(runnable);
+        thread.setName(getClass().getName() + " network listener");
+        thread.start();
     }
 
     private boolean createTrayIcon() {
@@ -190,6 +192,12 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
             itemNext.setFont(font);
             menuConsole.add(itemNext);
             
+            MenuItem itemPause = new MenuItem("Pause");
+            itemPause.setActionCommand("pause");
+            itemPause.addActionListener(this);
+            itemPause.setFont(font);
+            menuConsole.add(itemPause);
+
             MenuItem itemStop = new MenuItem("Stop");
             itemStop.setActionCommand("stop");
             itemStop.addActionListener(this);
@@ -257,6 +265,11 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
         } else if ("stop".equals(command)) {
             if (thread != null) {
                 thread.stopPlaying();
+            }
+        } else if ("pause".equals(command)) {
+            if (thread != null) {
+                boolean paused = thread.pause();
+                playingLabel.setText((paused ? "(Paused) " : "") + playingText);
             }
         } else if ("covers".equals(command)) {
             Cover[] list = getCoverList();
@@ -329,7 +342,7 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
         list = new List(7, false) {
             private static final long serialVersionUID = 1L;
             public Dimension getMinimumSize() {
-                return new Dimension(250, 200);
+                return new Dimension(350, 200);
             }
             public Dimension getPreferredSize() {
                 return getMinimumSize();
@@ -375,6 +388,15 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
         c.gridwidth = GridBagConstraints.EAST;
         frame.add(next, c);
 
+        Button pause = new Button("Pause");
+        pause.setFocusable(false);
+        pause.setActionCommand("pause");
+        pause.addActionListener(this);
+        pause.setFont(font);
+        c.anchor = GridBagConstraints.EAST;
+        c.gridwidth = GridBagConstraints.EAST;
+        frame.add(pause, c);
+
         Button covers = new Button("Covers");
         covers.setFocusable(false);
         covers.setActionCommand("covers");
@@ -400,22 +422,22 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
 
         c.anchor = GridBagConstraints.WEST;
         c.gridwidth = GridBagConstraints.REMAINDER;
-        playing = new Label() {
+        playingLabel = new Label() {
             private static final long serialVersionUID = 1L;
             public Dimension getMinimumSize() {
                 Dimension d = super.getMinimumSize();
-                d.width = 250;
+                d.width = 350;
                 return d;
             }
             public Dimension getPreferredSize() {
                 return getMinimumSize();
             }
         };
-        playing.setAlignment(Label.LEFT);
-        playing.setFont(font);
-        frame.add(playing, c);
+        playingLabel.setAlignment(Label.LEFT);
+        playingLabel.setFont(font);
+        frame.add(playingLabel, c);
 
-        int width = 300, height = 320;
+        int width = 400, height = 320;
         frame.setSize(width, height);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         frame.setLocation((screenSize.width - width) / 2, (screenSize.height - height) / 2);
@@ -576,11 +598,6 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
         } finally {
             in.close();
         }
-    }
-
-    public void setCurrentFile(File file) {
-        String name = file == null ? "" : file.getName();
-        playing.setText(getTitle(name));
     }
     
     private String getTitle(String name) {

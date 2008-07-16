@@ -26,6 +26,10 @@ public class PlayerThread implements Runnable {
             // ignore
         }
     }
+
+    public boolean pause() {
+        return decoder.pause();
+    }
     
     public static PlayerThread startPlaying(PlayerNoCover player, File file, ArrayList list) {
         PlayerThread t = new PlayerThread();
@@ -33,6 +37,7 @@ public class PlayerThread implements Runnable {
         t.currentFile = file;
         t.fileList = list;
         Thread thread = new Thread(t);
+        thread.setName(t.getClass().getName());
         thread.setPriority(Thread.MAX_PRIORITY);
         t.thread = thread;
         thread.start();
