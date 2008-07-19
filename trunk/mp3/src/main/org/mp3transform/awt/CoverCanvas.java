@@ -24,7 +24,10 @@ import javax.swing.ImageIcon;
 
 public class CoverCanvas extends Window implements ImageObserver, MouseMotionListener, MouseListener, Runnable {
 
+    private static final boolean BIG = false;
+
     private static final long serialVersionUID = 1L;
+    private static final int SCALE = 2;
     private static final int DELAY = 100;
     private Image coverImage;
     private BufferedImage coverBuffer;
@@ -44,7 +47,6 @@ public class CoverCanvas extends Window implements ImageObserver, MouseMotionLis
     private Rectangle scrollBar;
     private boolean stop;
     private long lastAction;
-    private static final boolean BIG = false;
     private int imageIndex = -1;
     private PlayerNoCover player;
     
@@ -62,25 +64,24 @@ public class CoverCanvas extends Window implements ImageObserver, MouseMotionLis
             screenHeight = 400;
         }
         int max = Math.min(screenWidth, screenHeight) / 2;
-        width = max;
-        height = max;
+        width = max * SCALE;
+        height = max * SCALE;
         shadow = height / 2;
         exit = new Rectangle(screenWidth - 40, screenHeight - 40, 20, 20);
         scrollBar = new Rectangle(50, screenHeight - 40, screenWidth - 100, 20);
-        coverBuffer = new BufferedImage(width, height, BufferedImage.TYPE_INT_BGR);
+        coverBuffer = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         coverGraphics = coverBuffer.createGraphics();
         coverArray = new int[width * height];
-        outputBuffer = new BufferedImage(width, height + shadow, BufferedImage.TYPE_INT_BGR);
+        outputBuffer = new BufferedImage(width, height + shadow, BufferedImage.TYPE_INT_RGB);
         outputArray = new int[width * (height + shadow)];
         emptyArray = new int[width * (height + shadow)];
-        int todo;
         coverGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         initImage();
         addMouseListener(this);
         addMouseMotionListener(this);
         if (!BIG) {
             Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-            setLocation((d.width - screenWidth) / 2, (d.height - height) / 2);
+            setLocation((d.width - screenWidth) / 2, (d.height - screenHeight) / 2);
             setSize(screenWidth, screenHeight);
             setVisible(true);
             toFront();
@@ -106,20 +107,24 @@ public class CoverCanvas extends Window implements ImageObserver, MouseMotionLis
         // System.out.println("  w:" + w + " h:" + h + " s:" + scale);
         coverGraphics.setTransform(new AffineTransform());
         coverGraphics.scale(scale, scale);
-        coverGraphics.drawImage(coverImage, (width - w) / 2, (height - h), this);
+        coverGraphics.drawImage(coverImage, (width - w) / 2, height - h, this);
         coverBuffer.getRGB(0, 0, width, height, coverArray, 0, width);
     }
 
     public void update(Graphics g) {
-        paint(g);
+        paint(g, false);
     }
     
     public void paint(Graphics g) {
+        paint(g, true);
+    }
+    
+    private void paint(Graphics g, boolean clean) {
         initImage();
         calculateImage(width, height);
         outputBuffer.setRGB(0, 0, width, height + shadow, outputArray, 0, width);
         Graphics2D g2 = (Graphics2D) g;
-        if (!init) {
+        if (!init || clean) {
             g2.setColor(Color.black);
             g2.fillRect(0, 0, screenWidth, screenHeight);
             g2.setColor(Color.darkGray);
@@ -133,10 +138,14 @@ public class CoverCanvas extends Window implements ImageObserver, MouseMotionLis
         double w = scrollBar.width / list.length;
         g2.fillRect(scrollBar.x + (int) (listIndex * w), scrollBar.y, (int) w, scrollBar.height);
         
-        g2.drawImage(outputBuffer, (screenWidth - width) / 2, (screenHeight - height - shadow)/2, width, height + shadow, null);
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        
+        g2.drawImage(outputBuffer, 
+                (screenWidth - width / SCALE) / 2, 
+                (screenHeight - (height + shadow) / SCALE) / 2, 
+                width / SCALE, (height + shadow) / SCALE, null);
     }
-    
-    
     
     private void calculateImage(int w, int h) {
         System.arraycopy(emptyArray, 0, outputArray, 0, emptyArray.length);
@@ -167,7 +176,7 @@ public class CoverCanvas extends Window implements ImageObserver, MouseMotionLis
             }
             double factor = zf;
             factor = (1 - x/xo) + x/xo * factor;            
-            double plus = (h * ((1 - factor) / 2));
+            double plus = h * ((1 - factor) / 2);
             int ys = 0;
             for (int y = 0; y < h; y++) {
                 ys = (int) (y * factor + plus);
