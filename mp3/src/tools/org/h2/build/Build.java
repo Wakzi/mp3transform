@@ -1,4 +1,4 @@
-package org.mp3transform.build;
+package org.h2.build;
 
 import java.io.File;
 import java.util.List;
@@ -27,9 +27,7 @@ public class Build extends BuildBase {
         clean();
         javac(new String[] {"-d", "temp", "-sourcepath", "src/main" }, getFiles("src"));
         
-        List files = getFiles("src/main");
-        files = filterFiles(files, false, "*.java");
-        files = filterFiles(files, false, "*.launch");
+        FileList files = getFiles("src/main").exclude("*.java").exclude("*.launch");
         copy("temp", files, "src/main");
         
         manifest("org.mp3transform.awt.Player");
@@ -47,9 +45,8 @@ public class Build extends BuildBase {
     }
     
     public void jar() {
-        List files = getFiles("temp");
-        files = filterFiles(files, false, "temp/org/mp3transform/build/*");
-        jar("bin/mp3transform.jar", "temp", files);
+        List files = getFiles("temp").exclude("temp/org/mp3transform/build/*");
+        jar("bin/mp3transform.jar", files, "temp");
         delete("temp");
     }
 
