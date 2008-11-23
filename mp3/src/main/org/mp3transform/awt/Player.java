@@ -100,6 +100,7 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
     }
 
     private void run() {
+        int todoProblemIfCurrentFolderIsDeleted;
         schedule();
         try {
             int port = prefs.getInt(PREF_LISTENER_PORT, 0);
