@@ -49,6 +49,7 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
     Frame frame;
 
     private Font font;
+    private Font fontWebdings;
     private Image icon;
     private File dir;
     private File[] files;
@@ -117,6 +118,7 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
         startListener();
         if (!GraphicsEnvironment.isHeadless()) {
             font = new Font("Dialog", Font.PLAIN, 11);
+            fontWebdings = new Font("Webdings", Font.TYPE1_FONT, 11);
             try {
                 InputStream in = getClass().getResourceAsStream("mp3.png");
                 if (in != null) {
@@ -238,6 +240,9 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
     }
     
     private void exit() {
+        if (thread != null) {
+            thread.stopPlaying();
+        }
         try {
             serverSocket.close();
         } catch (IOException e) {
@@ -320,7 +325,7 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
                 if (useSystemTray) {
                     frame.setVisible(false);
                 } else {
-                    System.exit(0);
+                    exit();
                 }
             }
         });
@@ -361,6 +366,8 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
                 }
             }
         });
+        
+        boolean web = fontWebdings != null;
 
         Button back = new Button("Up");
         back.setFocusable(false);
@@ -380,11 +387,11 @@ public class Player extends PlayerNoCover implements ActionListener, MouseListen
         c.gridwidth = GridBagConstraints.EAST;
         frame.add(play, c);
         
-        Button next = new Button(">>");
+        Button next = new Button(web ? "\u003a" : ">>");
         next.setFocusable(false);
         next.setActionCommand("next");
         next.addActionListener(this);
-        next.setFont(font);
+        next.setFont(web ? fontWebdings : font);
         c.anchor = GridBagConstraints.EAST;
         c.gridwidth = GridBagConstraints.EAST;
         frame.add(next, c);

@@ -16,18 +16,18 @@ public class Scheduler extends Thread {
 
     private static Scheduler instance;
 
-    private Set jobs = Collections.synchronizedSet(new HashSet());
+    private Set<Job> jobs = Collections.synchronizedSet(new HashSet<Job>());
 
     public static class Job {
         final Task task;
         String when;
         long nextRun;
         BitSet minutes, hoursOfDay, daysOfMonth, months, daysOfWeek;
-        
+
         Job(Task task) {
             this.task = task;
         }
-        
+
         void setWhen(String when) throws IllegalArgumentException {
             this.when = when;
             StringTokenizer tokenizer = new StringTokenizer(when, " \t\r\n");
@@ -172,7 +172,7 @@ public class Scheduler extends Thread {
     /**
      * Get the scheduler instance. This method creates a new instance if
      * required.
-     * 
+     *
      * @return
      */
     public static synchronized Scheduler getInstance() {
@@ -200,12 +200,12 @@ public class Scheduler extends Thread {
             if (jobs.size() == 0) {
                 continue;
             }
-            ArrayList list = new ArrayList(jobs);
+            ArrayList<Job> list = new ArrayList<Job>(jobs);
             now = System.currentTimeMillis();
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeInMillis(now);
             for (int i = 0; i < list.size(); i++) {
-                Job job = (Job) list.get(i);
+                Job job = list.get(i);
                 if (job.shouldRun(calendar)) {
                     job.run();
                 }
@@ -215,7 +215,7 @@ public class Scheduler extends Thread {
 
     /**
      * Create a new job with the given properties.
-     * 
+     *
      * @param when when the task should be run
      * @param taks the task to execute
      * @return the job
@@ -228,7 +228,7 @@ public class Scheduler extends Thread {
 
     /**
      * Schedule a job.
-     * 
+     *
      * @param job the job to schedule
      */
     public void schedule(Job job) {
