@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2008 H2 Group. Multiple-Licensed under the H2 License, 
+ * Copyright 2004-2010 H2 Group. Multiple-Licensed under the H2 License,
  * Version 1.0, and under the Eclipse Public License, Version 1.0
  * (http://h2database.com/html/license.html).
  * Initial Developer: H2 Group
@@ -38,72 +38,154 @@ import java.util.zip.ZipOutputStream;
 /**
  * This class is a complete pure Java build tool. It allows to build this
  * project without any external dependencies except a JDK.
- * Advantages: ability to debug the build, extensible, flexible, 
+ * Advantages: ability to debug the build, extensible, flexible,
  * no XML, a bit faster.
  */
 public class BuildBase {
-    
+
+    /**
+     * A list of strings.
+     */
+    public static class StringList extends ArrayList<String> {
+
+        private static final long serialVersionUID = 1L;
+
+        StringList(String... args) {
+            super();
+            addAll(Arrays.asList(args));
+        }
+
+        /**
+         * Add a list of strings.
+         *
+         * @param args the list to add
+         * @return the new list
+         */
+        public StringList plus(String...args) {
+            StringList newList = new StringList();
+            newList.addAll(this);
+            newList.addAll(Arrays.asList(args));
+            return newList;
+        }
+
+        /**
+         * Convert this list to a string array.
+         *
+         * @return the string array
+         */
+        public String[] array() {
+            String[] list = new String[size()];
+            for (int i = 0; i < size(); i++) {
+                list[i] = get(i);
+            }
+            return list;
+        }
+
+    }
+
     /**
      * A list of files.
      */
-    public static class FileList extends ArrayList implements List {
-        
-        private static final long serialVersionUID = -3241001695597802578L;
+    public static class FileList extends ArrayList<File> {
+
+        private static final long serialVersionUID = 1L;
 
         /**
          * Remove the files that match from the list.
          * Patterns must start or end with a *.
-         * 
+         *
          * @param pattern the pattern of the file names to remove
          * @return the new file list
          */
         public FileList exclude(String pattern) {
-            return filterFiles(this, false, pattern);
+            return filter(false, pattern);
         }
-        
+
         /**
          * Only keep the files that match.
          * Patterns must start or end with a *.
-         * 
+         *
          * @param pattern the pattern of the file names to keep
          * @return the new file list
          */
         public FileList keep(String pattern) {
-            return filterFiles(this, true, pattern);
+            return filter(true, pattern);
         }
-        
+
+        /**
+         * Filter a list of file names.
+         *
+         * @param files the original list
+         * @param keep if matching file names should be kept or removed
+         * @param pattern the file name pattern
+         * @return the filtered file list
+         */
+        private FileList filter(boolean keep, String pattern) {
+            boolean start = false;
+            if (pattern.endsWith("*")) {
+                pattern = pattern.substring(0, pattern.length() - 1);
+                start = true;
+            } else if (pattern.startsWith("*")) {
+                pattern = pattern.substring(1);
+            }
+            if (pattern.indexOf('*') >= 0) {
+                throw new RuntimeException("Unsupported pattern, may only start or end with *:" + pattern);
+            }
+            // normalize / and \
+            pattern = replaceAll(pattern, "/", File.separator);
+            FileList list = new FileList();
+            for (File f : this) {
+                String path = f.getPath();
+                boolean match = start ? path.startsWith(pattern) : path.endsWith(pattern);
+                if (match == keep) {
+                    list.add(f);
+                }
+            }
+            return list;
+        }
+
     }
-    
+
     /**
      * The output stream (System.out).
      */
-    protected PrintStream out = System.out;
-    
+    protected PrintStream sysOut = System.out;
+
     /**
      * If output should be disabled.
      */
     protected boolean quiet;
-    
+
     /**
      * This method should be called by the main method.
-     * 
+     *
      * @param args the command line parameters
      */
-    protected void run(String[] args) {
+    protected void run(String... args) {
         long time = System.currentTimeMillis();
         if (args.length == 0) {
             all();
         } else {
-            for (int i = 0; i < args.length; i++) {
-                String a = args[i];
+            for (String a : args) {
                 if ("-quiet".equals(a)) {
                     quiet = true;
+                } else if (a.startsWith("-D")) {
+                    String value;
+                    String key = a.substring(2);
+                    int valueIndex = key.indexOf('=');
+                    if (valueIndex >= 0) {
+                        value = key.substring(valueIndex + 1);
+                        key = key.substring(0, valueIndex);
+                    } else {
+                        value = "true";
+                    }
+                    System.setProperty(key, value);
                 } else {
                     Method m = null;
                     try {
-                        m = getClass().getMethod(a, new Class[0]);
+                        m = getClass().getMethod(a);
                     } catch (Exception e) {
-                        out.println("Unknown target: " + a);
+                        sysOut.println("Unknown target: " + a);
                         projectHelp();
                         break;
                     }
@@ -114,7 +196,7 @@ public class BuildBase {
         }
         println("Done in " + (System.currentTimeMillis() - time) + " ms");
     }
-    
+
     private Object invoke(Method m, Object instance, Object[] args) {
         try {
             try {
@@ -122,11 +204,15 @@ public class BuildBase {
             } catch (InvocationTargetException e) {
                 throw e.getCause();
             }
+        } catch (Error e) {
+            throw e;
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Throwable e) {
-            throw e instanceof Error ? ((Error) e) : new Error(e);
+            throw new RuntimeException(e);
         }
     }
-    
+
     /**
      * This method is called if no other target is specified in the command line.
      * The default behavior is to call projectHelp().
@@ -135,13 +221,13 @@ public class BuildBase {
     protected void all() {
         projectHelp();
     }
-    
+
     /**
      * Emit a beep.
      */
-    public void beep() {
-        out.print("\007");
-        out.flush();
+    protected void beep() {
+        sysOut.print("\007");
+        sysOut.flush();
     }
 
     /**
@@ -150,20 +236,25 @@ public class BuildBase {
      */
     protected void projectHelp() {
         Method[] methods = getClass().getDeclaredMethods();
-        out.println("Targets:");
-        for (int i = 0; i < methods.length; i++) {
-            Method m = methods[i];
-            if ((m.getModifiers() & Modifier.STATIC) == 0 && m.getParameterTypes().length == 0) {
-                out.println(m.getName());
+        Arrays.sort(methods, new Comparator<Method>() {
+            public int compare(Method a, Method b) {
+                return a.getName().compareTo(b.getName());
+            }
+        });
+        sysOut.println("Targets:");
+        for (Method m : methods) {
+            int mod = m.getModifiers();
+            if (!Modifier.isStatic(mod) && Modifier.isPublic(mod) && m.getParameterTypes().length == 0) {
+                sysOut.println(m.getName());
             }
         }
-        out.println();
+        sysOut.println();
     }
-    
+
     private boolean isWindows() {
         return System.getProperty("os.name").toLowerCase().indexOf("windows") >= 0;
     }
-    
+
     /**
      * Execute a script in a separate process.
      * In Windows, the batch file with this name (.bat) is run.
@@ -172,7 +263,7 @@ public class BuildBase {
      * @param args the command line parameters
      * @return the exit value
      */
-    protected int execScript(String script, String[] args) {
+    protected int execScript(String script, StringList args) {
         if (isWindows()) {
             script = script + ".bat";
         }
@@ -181,33 +272,33 @@ public class BuildBase {
 
     /**
      * Execute a program in a separate process.
-     * 
+     *
      * @param command the program to run
      * @param args the command line parameters
      * @return the exit value
      */
-    protected int exec(String command, String[] args) {
+    protected int exec(String command, StringList args) {
         try {
             print(command);
-            for (int i = 0; args != null && i < args.length; i++) {
-                print(" " + args[i]);
+            StringList cmd = new StringList();
+            cmd = cmd.plus(command);
+            if (args != null) {
+                for (String a : args) {
+                    print(" " + a);
+                }
+                cmd.addAll(args);
             }
             println("");
-            String[] cmdArray = new String[1 + (args == null ? 0 : args.length)];
-            cmdArray[0] = command;
-            if (args != null) {
-                System.arraycopy(args, 0, cmdArray, 1, args.length);
-            }
-            Process p = Runtime.getRuntime().exec(cmdArray);
-            copyInThread(p.getInputStream(), quiet ? null : out);
-            copyInThread(p.getErrorStream(), quiet ? null : out);
+            Process p = Runtime.getRuntime().exec(cmd.array());
+            copyInThread(p.getInputStream(), quiet ? null : sysOut);
+            copyInThread(p.getErrorStream(), quiet ? null : sysOut);
             p.waitFor();
             return p.exitValue();
         } catch (Exception e) {
-            throw new Error("Error: " + e, e);
+            throw new RuntimeException(e);
         }
     }
-    
+
     private void copyInThread(final InputStream in, final OutputStream out) {
         new Thread() {
             public void run() {
@@ -222,67 +313,66 @@ public class BuildBase {
                         }
                     }
                 } catch (Exception e) {
-                    throw new Error("Error: " + e, e);
+                    throw new RuntimeException(e);
                 }
             }
         } .start();
     }
-    
+
     /**
      * Read a final static field in a class using reflection.
-     * 
+     *
      * @param className the name of the class
      * @param fieldName the field name
      * @return the value as a string
      */
     protected String getStaticField(String className, String fieldName) {
         try {
-            Class clazz = Class.forName(className);
+            Class< ? > clazz = Class.forName(className);
             Field field = clazz.getField(fieldName);
             return field.get(null).toString();
         } catch (Exception e) {
-            throw new Error("Can not read field " + className + "." + fieldName, e);
+            throw new RuntimeException("Can not read field " + className + "." + fieldName, e);
         }
     }
 
     /**
      * Reads the value from a static method of a class using reflection.
-     * 
+     *
      * @param className the name of the class
      * @param methodName the field name
      * @return the value as a string
      */
     protected String getStaticValue(String className, String methodName) {
         try {
-            Class clazz = Class.forName(className);
-            Method method = clazz.getMethod(methodName, new Class[0]);
-            return method.invoke(null, new Object[0]).toString();
+            Class< ? > clazz = Class.forName(className);
+            Method method = clazz.getMethod(methodName);
+            return method.invoke(null).toString();
         } catch (Exception e) {
-            throw new Error("Can not read value " + className + "." + methodName + "()", e);
+            throw new RuntimeException("Can not read value " + className + "." + methodName + "()", e);
         }
     }
 
     /**
      * Copy files to the specified target directory.
-     * 
+     *
      * @param targetDir the target directory
      * @param files the list of files to copy
      * @param baseDir the base directory
      */
-    protected void copy(String targetDir, List files, String baseDir) {
+    protected void copy(String targetDir, FileList files, String baseDir) {
         File target = new File(targetDir);
         File base = new File(baseDir);
         println("Copying " + files.size() + " files to " + target.getPath());
         String basePath = base.getPath();
-        for (int i = 0; i < files.size(); i++) {
-            File f = (File) files.get(i);
+        for (File f : files) {
             File t = new File(target, removeBase(basePath, f.getPath()));
             byte[] data = readFile(f);
-            t.getParentFile().mkdirs();
+            mkdirs(t.getParentFile());
             writeFile(t, data);
         }
     }
-    
+
     private PrintStream filter(PrintStream out, final String[] exclude) {
         return new PrintStream(new FilterOutputStream(out) {
             private ByteArrayOutputStream buff = new ByteArrayOutputStream();
@@ -303,8 +393,8 @@ public class BuildBase {
                     byte[] data = buff.toByteArray();
                     String line = new String(data, "UTF-8");
                     boolean print = true;
-                    for (int i = 0; i < exclude.length; i++) {
-                        if (line.startsWith(exclude[i])) {
+                    for (String l : exclude) {
+                        if (line.startsWith(l)) {
                             print = false;
                             break;
                         }
@@ -321,14 +411,14 @@ public class BuildBase {
             }
         });
     }
-    
+
     /**
      * Run a Javadoc task.
-     * 
+     *
      * @param args the command line arguments to pass
      */
-    protected void javadoc(String[] args) {
-        int result;        
+    protected void javadoc(String...args) {
+        int result;
         PrintStream old = System.out;
         try {
             println("Javadoc");
@@ -341,44 +431,50 @@ public class BuildBase {
                         "Building "
                 }));
             }
-            Class clazz = Class.forName("com.sun.tools.javadoc.Main");
-            Method execute = clazz.getMethod("execute", new Class[] { String[].class });
-            result = ((Integer) invoke(execute, null, new Object[] { args })).intValue();
+            Class< ? > clazz = Class.forName("com.sun.tools.javadoc.Main");
+            Method execute = clazz.getMethod("execute", String[].class);
+            result = (Integer) invoke(execute, null, new Object[] { args });
         } catch (Exception e) {
-            result = exec("javadoc", args);
+            result = exec("javadoc", args(args));
         } finally {
             System.setOut(old);
         }
         if (result != 0) {
-            throw new Error("An error occurred");
+            throw new RuntimeException("An error occurred, result=" + result);
         }
     }
-    
+
     private String convertBytesToString(byte[] value) {
-        StringBuffer buff = new StringBuffer(value.length * 2);
-        for (int i = 0; i < value.length; i++) {
-            int c = value[i] & 0xff;
-            buff.append(Integer.toString(c >> 4, 16));
-            buff.append(Integer.toString(c & 0xf, 16));
+        StringBuilder buff = new StringBuilder(value.length * 2);
+        for (byte c : value) {
+            int x = c & 0xff;
+            buff.append(Integer.toString(x >> 4, 16)).
+                append(Integer.toString(x & 0xf, 16));
         }
         return buff.toString();
     }
-    
-    private String getSHA1(byte[] data) {
+
+    /**
+     * Generate the SHA1 checksum of a byte array.
+     *
+     * @param data the byte array
+     * @return the SHA1 checksum
+     */
+    protected String getSHA1(byte[] data) {
         MessageDigest md;
         try {
             md = MessageDigest.getInstance("SHA-1");
             return convertBytesToString(md.digest(data));
         } catch (NoSuchAlgorithmException e) {
-            throw new Error(e);
-        } 
+            throw new RuntimeException(e);
+        }
     }
-    
+
     /**
      * Download a file if it does not yet exist.
      * If no checksum is used (that is, if the parameter is null), the
      * checksum is printed. For security, checksums should always be used.
-     * 
+     *
      * @param target the target file name
      * @param fileURL the source url of the file
      * @param sha1Checksum the SHA-1 checksum or null
@@ -388,7 +484,7 @@ public class BuildBase {
         if (targetFile.exists()) {
             return;
         }
-        targetFile.getAbsoluteFile().getParentFile().mkdirs();
+        mkdirs(targetFile.getAbsoluteFile().getParentFile());
         ByteArrayOutputStream buff = new ByteArrayOutputStream();
         try {
             println("Downloading " + fileURL);
@@ -411,80 +507,55 @@ public class BuildBase {
             }
             in.close();
         } catch (IOException e) {
-            throw new Error("Error downloading", e);
+            throw new RuntimeException("Error downloading", e);
         }
         byte[] data = buff.toByteArray();
         String got = getSHA1(data);
         if (sha1Checksum == null) {
             println("SHA1 checksum: " + got);
         } else {
-            
             if (!got.equals(sha1Checksum)) {
-                throw new Error("SHA1 checksum mismatch");
+                throw new RuntimeException("SHA1 checksum mismatch; got: " + got);
             }
         }
         writeFile(targetFile, data);
     }
-    
+
     /**
      * Get the list of files in the given directory and all subdirectories.
-     * 
+     *
      * @param dir the source directory
      * @return the file list
      */
-    protected FileList getFiles(String dir) {
+    protected FileList files(String dir) {
         FileList list = new FileList();
         addFiles(list, new File(dir));
         return list;
     }
-    
-    private void addFiles(List list, File file) {
+
+    /**
+     * Create a string list.
+     *
+     * @param args the arguments
+     * @return the string list
+     */
+    protected StringList args(String...args) {
+        return new StringList(args);
+    }
+
+    private void addFiles(FileList list, File file) {
         if (file.getName().startsWith(".svn")) {
             // ignore
         } else if (file.isDirectory()) {
-            String[] fileNames = file.list();
             String path = file.getPath();
-            for (int i = 0; i < fileNames.length; i++) {
-                addFiles(list, new File(path, fileNames[i]));
+            for (String fileName : file.list()) {
+                addFiles(list, new File(path, fileName));
             }
         } else {
             list.add(file);
         }
     }
-    
-    /**
-     * Filter a list of file names.
-     * 
-     * @param files the original list
-     * @param keep if matching file names should be kept or removed
-     * @param pattern the file name pattern
-     * @return the filtered file list
-     */
-    static FileList filterFiles(FileList files, boolean keep, String pattern) {
-        boolean start = false;
-        if (pattern.endsWith("*")) {
-            pattern = pattern.substring(0, pattern.length() - 1);
-            start = true;
-        } else if (pattern.startsWith("*")) {
-            pattern = pattern.substring(1);
-        }
-        if (pattern.indexOf('*') >= 0) {
-            throw new Error("Unsupported pattern, may only start or end with *:" + pattern);
-        }
-        // normalize / and \
-        pattern = replaceAll(pattern, "/", File.separator);
-        FileList list = new FileList();
-        for (int i = 0; i < files.size(); i++) {
-            File f = (File) files.get(i);
-            String path = f.getPath();
-            boolean match = start ? path.startsWith(pattern) : path.endsWith(pattern);
-            if (match == keep) {
-                list.add(f);
-            }
-        }
-        return list;
-    }
-    
+
     private String removeBase(String basePath, String path) {
         if (path.startsWith(basePath)) {
             path = path.substring(basePath.length());
@@ -495,10 +566,10 @@ public class BuildBase {
         }
         return path;
     }
-    
+
     /**
      * Create or overwrite a file.
-     * 
+     *
      * @param file the file
      * @param data the data to write
      */
@@ -509,13 +580,13 @@ public class BuildBase {
             ra.setLength(data.length);
             ra.close();
         } catch (IOException e) {
-            throw new Error("Error writing to file " + file, e);
+            throw new RuntimeException("Error writing to file " + file, e);
         }
     }
-    
+
     /**
      * Read a file. The maximum file size is Integer.MAX_VALUE.
-     * 
+     *
      * @param file the file
      * @return the data
      */
@@ -524,20 +595,20 @@ public class BuildBase {
             RandomAccessFile ra = new RandomAccessFile(file, "r");
             long len = ra.length();
             if (len >= Integer.MAX_VALUE) {
-                throw new Error("File " + file.getPath() + " is too large");
+                throw new RuntimeException("File " + file.getPath() + " is too large");
             }
             byte[] buffer = new byte[(int) len];
             ra.readFully(buffer);
             ra.close();
             return buffer;
         } catch (IOException e) {
-            throw new Error("Error reading from file " + file, e);
+            throw new RuntimeException("Error reading from file " + file, e);
         }
     }
-    
+
     /**
      * Get the file name suffix.
-     * 
+     *
      * @param fileName the file name
      * @return the suffix or an empty string if there is none
      */
@@ -545,16 +616,16 @@ public class BuildBase {
         int idx = fileName.lastIndexOf('.');
         return idx < 0 ? "" : fileName.substring(idx);
     }
-    
+
     /**
      * Create a jar file.
-     * 
+     *
      * @param destFile the target file name
      * @param files the file list
      * @param basePath the base path
      * @return the size of the jar file in KB
      */
-    protected long jar(String destFile, List files, String basePath) {
+    protected long jar(String destFile, FileList files, String basePath) {
         long kb = zipOrJar(destFile, files, basePath, false, false, true);
         println("Jar " + destFile + " (" + kb + " KB)");
         return kb;
@@ -562,25 +633,25 @@ public class BuildBase {
 
     /**
      * Create a zip file.
-     * 
+     *
      * @param destFile the target file name
      * @param files the file list
      * @param basePath the base path
      * @param storeOnly if the files should not be compressed
      * @param sortBySuffix if the file should be sorted by the file suffix
      */
-    protected void zip(String destFile, List files, String basePath, boolean storeOnly, boolean sortBySuffix) {
+    protected void zip(String destFile, FileList files, String basePath, boolean storeOnly, boolean sortBySuffix) {
         long kb = zipOrJar(destFile, files, basePath, storeOnly, sortBySuffix, false);
         println("Zip " + destFile + " (" + kb + " KB)");
     }
 
-    private long zipOrJar(String destFile, List files, String basePath, boolean storeOnly, boolean sortBySuffix, boolean jar) {
+    private long zipOrJar(String destFile, FileList files, String basePath, boolean storeOnly, boolean sortBySuffix, boolean jar) {
         if (sortBySuffix) {
             // for better compressibility, sort by suffix, then name
-            Collections.sort(files, new Comparator() {
-                public int compare(Object o1, Object o2) {
-                    String p1 = ((File) o1).getPath();
-                    String p2 = ((File) o2).getPath();
+            Collections.sort(files, new Comparator<File>() {
+                public int compare(File f1, File f2) {
+                    String p1 = f1.getPath();
+                    String p2 = f2.getPath();
                     int comp = getSuffix(p1).compareTo(getSuffix(p2));
                     if (comp == 0) {
                         comp = p1.compareTo(p2);
@@ -589,7 +660,7 @@ public class BuildBase {
                 }
             });
         }
-        new File(destFile).getAbsoluteFile().getParentFile().mkdirs();
+        mkdirs(new File(destFile).getAbsoluteFile().getParentFile());
         // normalize the path (replace / with \ if required)
         basePath = new File(basePath).getPath();
         try {
@@ -604,8 +675,7 @@ public class BuildBase {
                 zipOut.setMethod(ZipOutputStream.STORED);
             }
             zipOut.setLevel(Deflater.BEST_COMPRESSION);
-            for (int i = 0; i < files.size(); i++) {
-                File file = (File) files.get(i);
+            for (File file : files) {
                 String fileName = file.getPath();
                 String entryName = removeBase(basePath, fileName);
                 byte[] data = readFile(file);
@@ -622,127 +692,141 @@ public class BuildBase {
             zipOut.close();
             return new File(destFile).length() / 1024;
         } catch (IOException e) {
-            throw new Error("Error creating file " + destFile, e);
+            throw new RuntimeException("Error creating file " + destFile, e);
         }
     }
-    
+
     /**
      * Get the current java specification version (for example, 1.4).
-     * 
+     *
      * @return the java specification version
      */
     protected String getJavaSpecVersion() {
         return System.getProperty("java.specification.version");
     }
-    
-    private List getPaths(List files) {
-        ArrayList list = new ArrayList(files.size());
-        for (int i = 0; i < files.size(); i++) {
-            list.add(((File) files.get(i)).getPath());
+
+    private List<String> getPaths(FileList files) {
+        StringList list = new StringList();
+        for (File f : files) {
+            list.add(f.getPath());
         }
         return list;
     }
-    
+
     /**
      * Compile the files.
-     * 
+     *
      * @param args the command line parameters
      * @param files the file list
      */
-    protected void javac(String[] args, FileList files) {
+    protected void javac(StringList args, FileList files) {
         println("Compiling " + files.size() + " classes");
-        ArrayList argList = new ArrayList(Arrays.asList(args));
-        argList.addAll(getPaths(filterFiles(files, true, ".java")));
-        args = new String[argList.size()];
-        argList.toArray(args);
+        StringList params = new StringList();
+        params.addAll(args);
+        params.addAll(getPaths(files.keep(".java")));
+        String[] array = params.array();
         int result;
         PrintStream old = System.err;
         try {
+            Class< ? > clazz = Class.forName("com.sun.tools.javac.Main");
             if (quiet) {
                 System.setErr(filter(System.err, new String[] {
                         "Note:"
                 }));
             }
-            Class clazz = Class.forName("com.sun.tools.javac.Main");
-            Method compile = clazz.getMethod("compile", new Class[] { String[].class });
+            Method compile = clazz.getMethod("compile", new Class< ? >[] { String[].class });
             Object instance = clazz.newInstance();
-            result = ((Integer) invoke(compile, instance, new Object[] { args })).intValue();
+            result = (Integer) invoke(compile, instance, new Object[] { array });
         } catch (Exception e) {
             e.printStackTrace();
-            result = exec("javac", args);
+            result = exec("javac", new StringList(array));
         } finally {
             System.setErr(old);
         }
         if (result != 0) {
-            throw new Error("An error occurred");
+            throw new RuntimeException("An error occurred");
         }
     }
-    
+
     /**
      * Call the main method of the given Java class using reflection.
-     * 
+     *
      * @param className the class name
      * @param args the command line parameters to pass
      */
-    protected void java(String className, String[] args) {
+    protected void java(String className, StringList args) {
         println("Running " + className);
-        if (args == null) {
-            args = new String[0];
-        }
+        String[] array = args == null ? new String[0] : args.array();
         try {
-            Method main = Class.forName(className).getMethod("main", new Class[] { String[].class });
-            invoke(main, null, new Object[] { args });
+            Method main = Class.forName(className).getMethod("main", String[].class);
+            invoke(main, null, new Object[] { array });
         } catch (Exception e) {
-            throw new Error(e);
+            throw new RuntimeException(e);
         }
     }
-    
+
     /**
      * Create the directory including the parent directories if they don't exist.
-     * 
+     *
      * @param dir the directory to create
      */
     protected void mkdir(String dir) {
         File f = new File(dir);
         if (f.exists()) {
             if (f.isFile()) {
-                throw new Error("Can not create directory " + dir + " because a file with this name exists");
+                throw new RuntimeException("Can not create directory " + dir + " because a file with this name exists");
             }
         } else {
-            if (!f.mkdirs()) {
-                throw new Error("Can not create directory " + dir);
-            }                
+            mkdirs(f);
         }
     }
-    
+
+    private void mkdirs(File f) {
+        if (!f.exists()) {
+            if (!f.mkdirs()) {
+                throw new RuntimeException("Can not create directory " + f.getAbsolutePath());
+            }
+        }
+    }
+
     /**
      * Delete all files in the given directory and all subdirectories.
-     *  
+     *
      * @param dir the name of the directory
      */
     protected void delete(String dir) {
         println("Deleting " + dir);
         delete(new File(dir));
     }
-    
+
+    /**
+     * Delete all files in the list.
+     *
+     * @param files the name of the files to delete
+     */
+    protected void delete(FileList files) {
+        for (File f : files) {
+            delete(f);
+        }
+    }
+
     private void delete(File file) {
         if (file.exists()) {
             if (file.isDirectory()) {
-                String[] fileNames = file.list();
                 String path = file.getPath();
-                for (int i = 0; i < fileNames.length; i++) {
-                    delete(new File(path, fileNames[i]));
+                for (String fileName : file.list()) {
+                    delete(new File(path, fileName));
                 }
             }
             if (!file.delete()) {
-                throw new Error("Can not delete " + file.getPath());
+                throw new RuntimeException("Can not delete " + file.getPath());
             }
         }
     }
-    
+
     /**
      * Replace each substring in a given string. Regular expression is not used.
-     * 
+     *
      * @param s the original text
      * @param before the old substring
      * @param after the new substring
@@ -759,26 +843,26 @@ public class BuildBase {
             index = next + after.length();
         }
     }
-    
+
     /**
      * Print a line to the output unless the quiet mode is enabled.
-     * 
+     *
      * @param s the text to write
      */
     protected void println(String s) {
         if (!quiet) {
-            out.println(s);
+            sysOut.println(s);
         }
     }
-    
+
     /**
      * Print a message to the output unless the quiet mode is enabled.
-     * 
+     *
      * @param s the message to write
      */
     protected void print(String s) {
         if (!quiet) {
-            out.print(s);
+            sysOut.print(s);
         }
     }
 
