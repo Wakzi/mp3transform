@@ -11,7 +11,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 public class AlarmTask implements Task, Runnable {
-    
+
     private String message;
     private Frame frame;
     private volatile boolean stop;
@@ -23,12 +23,13 @@ public class AlarmTask implements Task, Runnable {
     public static void main(String[] args) {
         new AlarmTask("Hello World").execute();
     }
-    
+
     void close() {
         stop = true;
         frame.dispose();
     }
-    
+
+    @SuppressWarnings("deprecation")
     public void execute() {
         System.out.println("Alarm: " + message);
         frame = new Frame("Alarm");
@@ -54,6 +55,7 @@ public class AlarmTask implements Task, Runnable {
         new Thread(this).start();
     }
 
+    @SuppressWarnings("deprecation")
     public void run() {
         while (!stop) {
             System.out.println("Alarm: " + message);

@@ -1,6 +1,10 @@
 #!/bin/sh
 if [ -z "$JAVA_HOME" ] ; then
-  echo "Error: JAVA_HOME is not defined."
+  if [ -d "/System/Library/Frameworks/JavaVM.framework/Home" ] ; then
+    export JAVA_HOME=/System/Library/Frameworks/JavaVM.framework/Home
+  else
+    echo "Error: JAVA_HOME is not defined."
+  fi
 fi
 if [ ! -f "bin/org/h2/build/Build.class" ] ; then
   if [ ! -d "bin" ] ; then

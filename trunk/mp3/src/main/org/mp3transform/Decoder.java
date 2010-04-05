@@ -183,6 +183,7 @@ public class Decoder {
                         // ignore
                     }
                 }
+                line.flush();
                 line.start();
             }
             try {
@@ -211,6 +212,10 @@ public class Decoder {
                     // System.out.println(line.getFormat().toString());
                     line.open(format);
                     line.start();
+                }
+                while (line.available() < 100) {
+                    Thread.yield();
+                    Thread.sleep(200);
                 }
                 decoder.decodeFrame(header, stream);
             } catch (Exception e) {
