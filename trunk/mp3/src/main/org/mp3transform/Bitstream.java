@@ -1,9 +1,9 @@
 /*
  * 11/19/04 1.0 moved to LGPL.
- * 
- * 11/17/04 Uncomplete frames discarded. E.B, javalayer@javazoom.net 
  *
- * 12/05/03 ID3v2 tag returned. E.B, javalayer@javazoom.net 
+ * 11/17/04 Uncomplete frames discarded. E.B, javalayer@javazoom.net
+ *
+ * 12/05/03 ID3v2 tag returned. E.B, javalayer@javazoom.net
  *
  * 12/12/99 Based on Ibitstream. Exceptions thrown on errors, Temporary removed seek functionality. mdm@techie.com
  *
@@ -110,7 +110,7 @@ public final class Bitstream {
         try {
             if (size > 0) {
                 rawID3v2 = new byte[size];
-                this.readBytes(rawID3v2, 0, rawID3v2.length);
+                readBytes(rawID3v2, 0, rawID3v2.length);
             }
         } catch (IOException e) {
             // ignore
@@ -119,7 +119,7 @@ public final class Bitstream {
 
     /**
      * Parse ID3v2 tag header to find out size of ID3v2 frames.
-     * 
+     *
      * @param in MP3 InputStream
      * @return size of ID3v2 frames + header
      * @throws IOException
@@ -139,7 +139,7 @@ public final class Bitstream {
 
     /**
      * Reads and parses the next frame from the input source.
-     * 
+     *
      * @return the Header describing details of the frame read, or null if the end of the stream has been reached.
      * @throws IOException
      */
@@ -204,7 +204,7 @@ public final class Bitstream {
     /**
      * Get next 32 bits from bitstream. They are stored in the headerstring. syncmod allows Synchro flag ID The returned
      * value is False at the end of stream.
-     * 
+     *
      * @param syncMode
      */
     int syncHeader(byte syncMode) throws IOException {
@@ -332,11 +332,11 @@ public final class Bitstream {
 
     /**
      * Reads the exact number of bytes from the source input stream into a byte array.
-     * 
+     *
      * @param b The byte array to read the specified number of bytes into.
      * @param offs The index in the array where the first byte read should be stored.
      * @param len the number of bytes to read.
-     * 
+     *
      * @exception Exception is thrown if the specified number of bytes could not be read from the stream.
      */
     private int readFully(byte[] b, int offs, int len) throws IOException {
